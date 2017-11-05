@@ -1,6 +1,7 @@
 package net.unlimited.missurenko.htmlParser;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -29,20 +30,27 @@ public class HtmlParserApplication {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Value("${cfs.host}")
+    private String CFSHost;
+    @Value("${cfs.port}")
+    private String CFSPort;
+
     @RequestMapping(value = "/*")
     @ResponseBody
     public String proxy(HttpServletRequest request, HttpServletResponse response,
                         @RequestBody String str) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-        if (requestURI.equalsIgnoreCase("/ACTION=GETSTATUS")) {
-            String url = "http://" + request.getRemoteHost() + ":7000" + requestURI;
+        System.out.println("console log - " + requestURI);
+        if (requestURI.equalsIgnoreCase("/ACTION=INGEST")) {
+            String url = "http://" + CFSHost + ":" + CFSPort + requestURI;
+            String res = restTemplate.postForObject(url, str, String.class);
+            System.out.println("log Ingest");
+            return res;
+        } else {
+            String url = "http://" + CFSHost + ":" + CFSPort + requestURI;
             String res = restTemplate.postForObject(url, str, String.class);
             return res;
-
         }
-//        request.getHeaders();
-        System.out.println("Hi");
-        return "";
     }
 
 
