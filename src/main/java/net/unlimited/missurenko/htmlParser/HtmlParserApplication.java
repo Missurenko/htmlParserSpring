@@ -1,5 +1,6 @@
 package net.unlimited.missurenko.htmlParser;
 
+import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -11,10 +12,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
+import org.xml.sax.SAXException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
 @SpringBootApplication
@@ -38,9 +41,11 @@ public class HtmlParserApplication {
     @RequestMapping(value = "/*")
     @ResponseBody
     public String proxy(HttpServletRequest request, HttpServletResponse response,
-                        @RequestBody String str) throws ServletException, IOException {
+                        @RequestBody String str) throws ServletException, IOException, ParserConfigurationException, SAXException {
         String requestURI = request.getRequestURI();
         System.out.println("console log - " + requestURI);
+        Spliter spliter = new Spliter(str);
+        String resultBySpliter = spliter.splitByPart();
         if (requestURI.equalsIgnoreCase("/ACTION=INGEST")) {
             String url = "http://" + CFSHost + ":" + CFSPort + requestURI;
             String res = restTemplate.postForObject(url, str, String.class);
