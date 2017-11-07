@@ -1,4 +1,4 @@
-package net.unlimited.missurenko.htmlParser;
+package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
 import org.xml.sax.SAXException;
@@ -32,37 +32,56 @@ public class Spliter {
 
 
         String urlDecoder = java.net.URLDecoder.decode(codeStr, "UTF-8");
+        String splitByNoNeed = splitReturnByNumber(urlDecoder, "&adds=", 1);
+        String[] splitResult = splitReturn(splitByNoNeed, "&removedocs=");
 
-
-        String result = splitReturnByNumber(urlDecoder, "&adds=", 1);
-        String[] splitResult = splitReturn(result, "&removedocs=");
-
-        // need add if have something
-        // can no be adds
         String adds = splitResult[0];
-        // can no be remove
-        String removes = splitResult[1];
+        String removes = null;
+        if (splitResult.length > 1) {
+            removes = splitResult[1];
+            removes = splitReturnByNumber(removes, "</removedocs>", 0);
+            removes = splitReturnByNumber(removes, "<removedocs>", 1);
+
+        }
         adds = splitReturnByNumber(adds, "</adds>", 0);
         adds = splitReturnByNumber(adds, "<adds>", 1);
         // take all add from fetch
         List<String> allAddList = getAllNodes(adds, "<add>", "</add>");
 
+        // send to read for ingest
         List<String> allFileList = getAllNodes(adds, "<source filename=\"", "\" lifetime=");
         allFileList = removeFirstAndEnd(allFileList);
-        List<String> allIndeficationList = getAllNodes(adds, "<AUTN_IDENTIFIER>", "</AUTN_IDENTIFIER>");
-        allIndeficationList = removeFirstAndEnd(allIndeficationList);
+        List<String> allCustomerIdList = getAllNodes(adds, "<CUSTOMER-RNID>", "</CUSTOMER-RNID>");
+        // send to read for ingest
+        allCustomerIdList = removeFirstAndEnd(allCustomerIdList);
 
 
-        removes = splitReturnByNumber(removes, "</removedocs>", 0);
-        removes = splitReturnByNumber(removes, "<removedocs>", 1);
-        // take all remove from fetch
-        List<String> allRemoveList = getAllNodes(removes, "<remove>", "</remove>");
 
-        Map<String, String> allFilesMap = doInfoByKeyValue(allFileList, allIndeficationList);
-        Map<String, String> allRemoveMap = doInfoByKeyValue(allIndeficationList, allRemoveList);
-        Map<String, String> allAddMap = doInfoByKeyValue(allIndeficationList, allAddList);
+        List<String> allIndeficationActionList = getAllNodes(adds, "<AUTN_IDENTIFIER>", "</AUTN_IDENTIFIER>");
+        allIndeficationActionList = removeFirstAndEnd(allIndeficationActionList);
 
-        result = concatAndEncodeString(allAddMap, allRemoveMap);
+        Map<String, String> allFilesMap = doInfoByKeyValue(allFileList, allIndeficationActionList);
+        // maybe need change
+        ReadCopyForIngest readCopyForIngest = new ReadCopyForIngest();
+        // must return key  new filePatch value AUTN_IDENTIFIER by action
+        Map<String,String> request = readCopyForIngest.start(allFilesMap,allCustomerIdList);
+
+        System.out.println("Unswer in spliter");
+        // maybe need change
+
+
+
+        Map<String, String> allRemoveMap = null;
+        if (removes != null) {
+            // take all remove from fetch
+            List<String> allRemoveList = getAllNodes(removes, "<remove>", "</remove>");
+            allRemoveMap = doInfoByKeyValue(allIndeficationActionList, allRemoveList);
+        }
+
+
+        Map<String, String> allAddMap = doInfoByKeyValue(allIndeficationActionList, allAddList);
+
+        String result = concatAndEncodeString(allAddMap, allRemoveMap);
 
         String xmlText = "";
         return result;
@@ -78,6 +97,8 @@ public class Spliter {
 
         return allFilesMap;
     }
+
+//    private Map<String,String>
 
     /**
      * @param allFilesMap contain all patch for File
@@ -121,14 +142,15 @@ public class Spliter {
             sb.append("</add>");
         }
         sb.append("</adds>");
-        sb.append("&removedocs=<removedocs>");
-        for (String remove : allRemoveMap.values()) {
-            sb.append("<remove>");
-            sb.append(remove);
-            sb.append("</remove>");
+        if (allRemoveMap != null) {
+            sb.append("&removedocs=<removedocs>");
+            for (String remove : allRemoveMap.values()) {
+                sb.append("<remove>");
+                sb.append(remove);
+                sb.append("</remove>");
+            }
+            sb.append("</removedocs>");
         }
-        sb.append("</removedocs>");
-
         String result = sb.toString();
         result = URLEncoder.encode(result, "UTF-8");
         return result;
@@ -151,8 +173,8 @@ public class Spliter {
     /**
      * remove add and remove what file been remove parser
      *
-     * @param allSomething
-     * @param keys
+     * @param allSomething key CUSTOMER-RNID value add,remove
+     * @param keys         task indification "CUSTOMER-RNID"
      * @return map what contain part what need for encode
      */
     private Map<String, String> removeByKey(Map<String, String> allSomething, List<String> keys) {
@@ -163,8 +185,8 @@ public class Spliter {
     }
 
     /**
-     * @param keyIndefication key from xml doc
-     * @param value           file or add or remove by  key from xml doc
+     * @param keyIndefication key task indification from xml doc
+     * @param value           file or add or remove by  key from xml(from fetch) doc
      * @return put value in map  for indetified later
      */
     private Map<String, String> doInfoByKeyValue(List<String> keyIndefication, List<String> value) {

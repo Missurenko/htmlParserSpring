@@ -1,4 +1,4 @@
-package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
+package net.unlimited.missurenko.htmlParser.parser.service.noNeed;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -9,7 +9,7 @@ import java.io.IOException;
 // no need no programm
 public class CrownUrl {
 
-    Document crown(String urlRead) {
+    public Document crown(String urlRead) {
 
         Document result = null;
         try {

@@ -3,6 +3,7 @@ package net.unlimited.missurenko.htmlParser.parser.service.impl;
 //import org.apache.commons.io.FileUtils;
 
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
+import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -136,36 +137,34 @@ public class FileReadWriteImpl implements FileReadWrite {
         return allFiles;
     }
 
+    /**
+     * @param folder temp folder by defolt is temp file in webConnector
+     * @return Object File what contain cfg webConnector
+     */
     private File fileConfigFullPath(File folder) {
-
-        if (folder.listFiles() == null) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            fileConfigFullPath(folder);
-        }
         for (final File fileEntry : folder.listFiles()) {
             String[] fileName = fileEntry.getName().split("\\.");
             if (fileName.length > 1) {
-                if (fileName[1].equals("txt")) {
+                if (fileName[1].equals("cfg")) {
                     return fileEntry;
                 }
             }
-
         }
         System.out.println("Need do txt file configuration webConnector/temp/");
-        fileConfigFullPath(folder);
+
         return folder;
 
     }
 
+    /**
+     * TODO return value is idiots
+     *
+     * @param file what need delete
+     * @return
+     */
     @Override
     public boolean delete(File file) {
-
         file.delete();
-
         return true;
     }
 
@@ -174,6 +173,11 @@ public class FileReadWriteImpl implements FileReadWrite {
         List<String> result = new ArrayList<>();
         File folderFile = new File(folder);
         String fullPath = fileConfigFullPath(folderFile).getAbsolutePath();
+
+        // File file = new File("webconnector.cfg");
+
+        //String str = FileUtils.readFileToString(file, "UTF-8");
+
         System.out.println("Start read config file");
         FileInputStream fis = null;
         try {
@@ -200,8 +204,6 @@ public class FileReadWriteImpl implements FileReadWrite {
                         result.add(line);
                     }
                 }
-                ;
-
             }
             br.close();
         } catch (IOException e) {
@@ -213,15 +215,6 @@ public class FileReadWriteImpl implements FileReadWrite {
         return result;
     }
 
-    private boolean existOrNot(String path) {
-        File file = new File(path);
-        while (!file.exists()) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ie) { /* safe to ignore */ }
-        }
-        return true;
-    }
 
     @Override
     public String readConfigurationTxt(String folder, String txt) {
@@ -229,7 +222,7 @@ public class FileReadWriteImpl implements FileReadWrite {
         String path = folder.concat("/" + txt);
         String lines = "";
         FileInputStream fis = null;
-        if (existOrNot(path)) {
+
             try {
 
                 fis = new FileInputStream(path);
@@ -243,7 +236,7 @@ public class FileReadWriteImpl implements FileReadWrite {
                 lines = br.readLine();
             } catch (IOException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 try {
                     if (br != null) {
                         br.close();
@@ -252,11 +245,9 @@ public class FileReadWriteImpl implements FileReadWrite {
                     e.printStackTrace();
                 }
             }
-                File file = new File(path);
+            File file = new File(path);
 //                file.delete();
-                return lines;
-            }
-        return lines;
+            return lines;
     }
 
     @Override

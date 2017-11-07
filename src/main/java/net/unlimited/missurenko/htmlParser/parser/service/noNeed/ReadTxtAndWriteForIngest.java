@@ -1,6 +1,8 @@
-package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
+package net.unlimited.missurenko.htmlParser.parser.service.noNeed;
 
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
+import net.unlimited.missurenko.htmlParser.parser.service.mainWork.Parser;
+import net.unlimited.missurenko.htmlParser.parser.service.noNeed.CrownUrl;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 

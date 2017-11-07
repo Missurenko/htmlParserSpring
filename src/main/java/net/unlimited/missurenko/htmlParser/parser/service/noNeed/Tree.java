@@ -1,4 +1,6 @@
-package net.unlimited.missurenko.htmlParser.parser.dto;
+package net.unlimited.missurenko.htmlParser.parser.service.noNeed;
+
+import net.unlimited.missurenko.htmlParser.parser.dto.BooleanDto;
 
 import java.util.List;
 

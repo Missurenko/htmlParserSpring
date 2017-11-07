@@ -4,11 +4,15 @@ import org.jsoup.nodes.Element;
 
 import java.io.File;
 
+// think why need
+
 public class ElementFilteredDto {
 
     private Element filteredElement;
 
-    private File file;
+    private String olderFilePatch;
+
+    private String newFilePatch;
 
     public Element getFilteredElement() {
         return filteredElement;
@@ -18,11 +22,19 @@ public class ElementFilteredDto {
         this.filteredElement = filteredElement;
     }
 
-    public File getFile() {
-        return file;
+    public String getOlderFilePatch() {
+        return olderFilePatch;
     }
 
-    public void setFile(File file) {
-        this.file = file;
+    public void setOlderFilePatch(String olderFilePatch) {
+        this.olderFilePatch = olderFilePatch;
+    }
+
+    public String getNewFilePatch() {
+        return newFilePatch;
+    }
+
+    public void setNewFilePatch(String newFilePatch) {
+        this.newFilePatch = newFilePatch;
     }
 }

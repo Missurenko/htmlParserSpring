@@ -1,6 +1,6 @@
 package net.unlimited.missurenko.htmlParser;
 
-import org.jsoup.nodes.Document;
+import net.unlimited.missurenko.htmlParser.parser.service.mainWork.Spliter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
