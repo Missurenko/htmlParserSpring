@@ -1,16 +1,14 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Spliter {
 
@@ -30,11 +28,9 @@ public class Spliter {
      */
     public String splitByPart() throws IOException, ParserConfigurationException, SAXException {
 
-
         String urlDecoder = java.net.URLDecoder.decode(codeStr, "UTF-8");
         String splitByNoNeed = splitReturnByNumber(urlDecoder, "&adds=", 1);
         String[] splitResult = splitReturn(splitByNoNeed, "&removedocs=");
-
         String adds = splitResult[0];
         String removes = null;
         if (splitResult.length > 1) {
@@ -48,38 +44,30 @@ public class Spliter {
         // take all add from fetch
         List<String> allAddList = getAllNodes(adds, "<add>", "</add>");
 
-        // send to read for ingest
-        List<String> allFileList = getAllNodes(adds, "<source filename=\"", "\" lifetime=");
-        allFileList = removeFirstAndEnd(allFileList);
-        List<String> allCustomerIdList = getAllNodes(adds, "<CUSTOMER-RNID>", "</CUSTOMER-RNID>");
-        // send to read for ingest
-        allCustomerIdList = removeFirstAndEnd(allCustomerIdList);
+        // key patch // value key indification
+        List<AllInformationForTask> allTask = new ArrayList<>();
+        Map<String, List<String>> allFileMap = getFilesByCumtomerId(allAddList);
+        allTask = transferObjectSetIdAndFile(allFileMap);
 
-
-
-        List<String> allIndeficationActionList = getAllNodes(adds, "<AUTN_IDENTIFIER>", "</AUTN_IDENTIFIER>");
-        allIndeficationActionList = removeFirstAndEnd(allIndeficationActionList);
-
-        Map<String, String> allFilesMap = doInfoByKeyValue(allFileList, allIndeficationActionList);
         // maybe need change
         ReadCopyForIngest readCopyForIngest = new ReadCopyForIngest();
-        // must return key  new filePatch value AUTN_IDENTIFIER by action
-        Map<String,String> request = readCopyForIngest.start(allFilesMap,allCustomerIdList);
-
-        System.out.println("Unswer in spliter");
-        // maybe need change
+        // must return update  List<AllInformationForTask>
+        allTask = readCopyForIngest.start(allTask);
 
 
+        List<String> allFileList = new ArrayList<>();
+        allFileList.addAll(request.values());
+        // create all remove map
 
         Map<String, String> allRemoveMap = null;
         if (removes != null) {
             // take all remove from fetch
             List<String> allRemoveList = getAllNodes(removes, "<remove>", "</remove>");
-            allRemoveMap = doInfoByKeyValue(allIndeficationActionList, allRemoveList);
+            allRemoveMap = doInfoByKeyValue(allFileList, allRemoveList);
         }
 
 
-        Map<String, String> allAddMap = doInfoByKeyValue(allIndeficationActionList, allAddList);
+        Map<String, String> allAddMap = doInfoByKeyValue(allFileList, allAddList);
 
         String result = concatAndEncodeString(allAddMap, allRemoveMap);
 
@@ -87,9 +75,50 @@ public class Spliter {
         return result;
     }
 
+
+    private List<AllInformationForTask> transferObjectSetIdAndFile(Map<String, List<String>> transfer) {
+        List<AllInformationForTask> result = new ArrayList<>();
+        for (String key : transfer.keySet()) {
+            AllInformationForTask create = new AllInformationForTask();
+            create.setCustomerId(key);
+            Map<String, String> oldAndNewPatch = new HashMap<>();
+            for (String patch : transfer.get(key)) {
+                oldAndNewPatch.put(patch, null);
+            }
+            create.setAllPatchsFiles(oldAndNewPatch);
+            result.add(create);
+        }
+        return result;
+    }
+
     /**
-     * Я думаю треба замінити в видалинні куди я пишу, щоб видалив за мене CFS
+     * @param allAddList all add by fetch
+     * @return map key  CUSTOMER-RNID values files Patchs what link on CUSTOMER-RNID
      */
+    // if have time refactoring whis code what split patchFiles
+    private Map<String, List<String>> getFilesByCumtomerId(List<String> allAddList) {
+
+        Map<String, List<String>> result = new HashMap<>();
+        for (int i = 0; i < allAddList.size(); i++) {
+            String addByFentch = allAddList.get(i);
+            // send to read for ingest
+
+            List<String> allCustomerIdListNew = getAllNodes(addByFentch, "<CUSTOMER-RNID>", "</CUSTOMER-RNID>");
+            String customerId = allCustomerIdListNew.get(1);
+            List<String> allFileList = getAllNodes(allCustomerIdListNew.get(2), "<source filename=\"", "\" lifetime=");
+            String filePatch = allFileList.get(1);
+            if (!result.containsKey(customerId)) {
+                result.put(customerId, Arrays.asList(filePatch));
+            } else {
+                List<String> addNewValue = result.get(customerId);
+                addNewValue.add(filePatch);
+                result.put(customerId, addNewValue);
+            }
+
+        }
+
+        return result;
+    }
 
 
     private Map<String, String> changeFilePatchForAdd(Map<String, String> allFilesMap) {

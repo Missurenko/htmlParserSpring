@@ -1,11 +1,8 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForParse;
-import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
-import net.unlimited.missurenko.htmlParser.parser.service.impl.FileReadWriteImpl;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
 
-import java.io.File;
 import java.util.*;
 
 // no need for programm
@@ -14,12 +11,10 @@ public class ConfigAnalise {
 
     /**
      * @param configList list what contain all line cfs file
-     * @param idCustomer list customer indification CUSTOMER-RNID
      * @return map what contain map key customer indification CUSTOMER-RNID and value keyWord for this task
      */
-    //TODO this
-
-    public Map<String, AllInformationForParse> parceConfigCFG(List<String> configList, List<String> idCustomer) {
+    //TODO fix bag this [] - key &&&
+    public List<AllInformationForTask> parceConfigCFG(List<String> configList) {
         System.out.println("Start work condig reader");
 
         System.out.println("Read config");
@@ -27,7 +22,7 @@ public class ConfigAnalise {
         String nameTask = "null";
 
         // think what change
-        Map<String, AllInformationForParse> allTasksInfo = new HashMap<>();
+        Map<String, AllInformationForTask> allTasksInfo = new HashMap<>();
         for (String configLine : configList) {
             if (configLine.equals("[FetchTasks]")) {
                 captionConfig = configLine;
@@ -45,7 +40,13 @@ public class ConfigAnalise {
                 if (!config.matches("^\\D*$") &
                         configLine.charAt(0) != '[') {
                     nameTask = value;
-                    allTasksInfo.put("[" + nameTask + "]", new AllInformationForParse());
+                    // WARNING hete bags whis [] then stay if
+                    if (!nameTask.equals("")) {
+                        AllInformationForTask task = new AllInformationForTask();
+                        task.setTaskName(nameTask);
+                        allTasksInfo.put("[" + nameTask + "]", task);
+
+                    }
                 }
             }
             if (configLine.charAt(0) == '[') {
@@ -63,8 +64,14 @@ public class ConfigAnalise {
 
                 }
             }
+            if (splitLine[0].equals("IngestAction0")) {
+                allTasksInfo.get(nameTask).setCustomerId(splitLine[2]);
+            }
+
         }
-        return allTasksInfo;
+        List<AllInformationForTask> result = new ArrayList<>();
+        result.addAll(allTasksInfo.values());
+        return result;
     }
 
 

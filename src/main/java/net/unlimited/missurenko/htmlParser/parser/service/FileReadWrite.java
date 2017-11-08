@@ -1,42 +1,48 @@
 package net.unlimited.missurenko.htmlParser.parser.service;
 
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public interface FileReadWrite {
 
 
-    // delete child
-    // собрать обратно
-    //поток прикрутить
-    //и чтоб можно автоматически параметри
-    //
-    Map<String, File> readDir(Map<String, File> allFiles, String dirPathHtml, List<String> keyWord) throws IOException;
+    /**
+     * @param parseredOrigin html what beem parsered
+     * @param path full patch where write file
+     * @param nameDoc name origin file
+     * @return all ok
+     */
+    boolean writeToDir(Element parseredOrigin, String path, String nameDoc);
 
-    boolean writeToDir(Element parseredOrigin, String path, String dirPathHtml, String nameDoc);
+    /**
+     * @param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
+     * @param keyWord  // key CUSTOMER-RNID  value list keyWord
+     * @return map what contain  key CUSTOMER-RNID and   list documents by value
+     */
+    Map<String, List<Document>> mapDocFilteredByKeyWord(Map<String, List<String>> allFiles, Map<String, List<String>> keyWord);
 
-    boolean writeToDir(Element parseredOrigin, String nameDoc);
-
-    boolean delete(File file);
-
-
-
-
+    /**
+     * @param folder full patch to CFS
+     * @return list string what contain all file lines
+     */
     List<String> readConfigByLine(String folder);
+   /**
+     *
+     * @return all lines WebConnector.cfg in temp directory
+     * @param allTask here need take main folder for know absolut TEMP directory
+     */
+    List<String> webConnectorConfigByLines(List<AllInformationForTask> allTask);
+
 
     String readConfigurationTxt(String folder, String pathName);
 
     void writeToDir(String whereWrite);
 
-
-    // delete child
-    // собрать обратно
-    //поток прикрутить
-    //и чтоб можно автоматически параметри
-    //
-
+    boolean writeToDir(Element parseredOrigin, String nameDoc);
 }

@@ -2,54 +2,37 @@ package net.unlimited.missurenko.htmlParser.parser.service.impl;
 
 //import org.apache.commons.io.FileUtils;
 
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
-import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FileReadWriteImpl implements FileReadWrite {
 
-
-    // delete child
-    // собрать обратно
-    //поток прикрутить
-    //и чтоб можно автоматически параметри
-    //
+    /**
+     * @param parseredOrigin html what beem parsered
+     * @param path           full patch where write file
+     * @param nameDoc        name origin file
+     * @return all ok
+     */
     @Override
-    public Map<String, File> readDir(Map<String, File> allFiles, String dirPathHtml, List<String> keyWord) throws IOException {
-        System.out.println("readDir name: dir" + dirPathHtml);
-        File htmlFile = new File(dirPathHtml);
-        return listFilesFilteredForFolder(allFiles, htmlFile, keyWord);
-    }
-
-    @Override
-    public boolean writeToDir(Element parseredOrigin, String path, String nameDirTask, String nameDoc) {
-
-
+    public boolean writeToDir(Element parseredOrigin, String path, String nameDoc) {
         File pathFile = new File(path);
-
-
         if (!pathFile.exists()) {
-
             boolean craete = new File(path).mkdirs();
             System.out.println("create folder" + craete);
             // If you require it to make the entire directory path including parents,
             // use directory.mkdirs(); here instead.
         }
-
 //        File dirPath = new File("C:\\Autonomy\\WebConnector\\example\\" +nameDoc);
         File dirPath = new File(path + "/" + nameDoc);
         PrintStream out = null;
         try {
-            System.out.println("writeToDir name: dir" + nameDirTask + "/n" +
-                    "name doc" + nameDoc);
             out = new PrintStream(
                     new BufferedOutputStream(
                             new FileOutputStream(dirPath, true)));
@@ -63,14 +46,12 @@ public class FileReadWriteImpl implements FileReadWrite {
             }
         }
         System.out.println("Writer : ");
-
         return true;
-
     }
 
+    // no need
     @Override
     public boolean writeToDir(Element parseredOrigin, String nameDoc) {
-
         File pathFile = new File(nameDoc);
         PrintStream out = null;
         try {
@@ -93,48 +74,59 @@ public class FileReadWriteImpl implements FileReadWrite {
 
     }
 
-
-    // TODO Change metod give only 1 folder
-    private Map<String, File> listFilesFilteredForFolder(Map<String, File> allFiles, File folder, List<String> keyWord) {
-
-        if (folder.listFiles() == null) {
-            return allFiles;
+    /**
+     * @param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
+     * @param keyWord  key CUSTOMER-RNID  value list keyWord
+     * @return map what contain list documents by value and   key CUSTOMER-RNID
+     */
+    @Override
+    public Map<String, List<Document>> mapDocFilteredByKeyWord(Map<String, List<String>> allFiles, Map<String, List<String>> keyWord) {
+        // key customer id vlue list Documet
+        Map<String, List<Document>> result = new HashMap<>();
+        for (String keyCustomerId : allFiles.keySet()) {
+            List<File> filesForOneKeyCustomer = getFilesByPatchs(allFiles.get(keyCustomerId));
+            List<Document> resultByDoc = extractDocFromFile(filesForOneKeyCustomer, keyWord.get(keyCustomerId));
+            result.put(keyCustomerId, resultByDoc);
         }
-        // test this part
-        List<File> fileForDelete = new ArrayList<>();
-        for (File fileEntry : folder.listFiles()) {
+        return result;
+    }
 
+    /**
+     * @param filesForOneCustomerTask all files
+     * @param keyWord                 key word for one task by key CUSTOMER-RNID
+     * @return list filtered document
+     */
+    private List<Document> extractDocFromFile(List<File> filesForOneCustomerTask, List<String> keyWord) {
+        List<Document> resultByDoc = new ArrayList<>();
+        for (File file : filesForOneCustomerTask) {
             Document doc = null;
-            if (fileEntry != null) {
-                if (allFiles.containsKey(fileEntry)) {
-                    if (!allFiles.get(fileEntry).equals(null)) {
-                        allFiles.put(fileEntry.getName(), null);
-                    }
-                }
+            if (file != null) {
                 try {
-                    doc = Jsoup.parse(fileEntry, "UTF-8");
+                    doc = Jsoup.parse(file, "UTF-8");
                     System.out.println("read doc in FileReadWriteImpl");
                 } catch (IOException e) {
                     System.out.println("Problem this parser in FileReadWriteImpl");
                     e.printStackTrace();
                 }
-                for (String key : keyWord) {
-                    System.out.println("KeyWord [" + key);
-                }
-                if (!allFiles.containsKey(fileEntry)) {
-                    if (containKeyWordInDoc(doc, keyWord)) {
-                        allFiles.put(fileEntry.getName(), fileEntry);
-                    } else {
-                        fileForDelete.add(fileEntry);
-                        System.out.println("fileForDelete add");
-                    }
+                if (containKeyWordInDoc(doc, keyWord)) {
+                    resultByDoc.add(doc);
                 }
             }
         }
-        for (File file : fileForDelete) {
-            file.delete();
+        return resultByDoc;
+    }
+
+    /**
+     * @param allPatch all patchs by  key CUSTOMER-RNID
+     * @return list files
+     */
+    private List<File> getFilesByPatchs(List<String> allPatch) {
+        List<File> filesForOneKeyCustomer = new ArrayList<>();
+        for (String patch : allPatch) {
+            File file = new File(patch);
+            filesForOneKeyCustomer.add(file);
         }
-        return allFiles;
+        return filesForOneKeyCustomer;
     }
 
     /**
@@ -150,24 +142,14 @@ public class FileReadWriteImpl implements FileReadWrite {
                 }
             }
         }
-        System.out.println("Need do txt file configuration webConnector/temp/");
-
         return folder;
-
     }
+
 
     /**
-     * TODO return value is idiots
-     *
-     * @param file what need delete
-     * @return
+     * @param folder full patch to CFS
+     * @return list string what contain all file lines
      */
-    @Override
-    public boolean delete(File file) {
-        file.delete();
-        return true;
-    }
-
     @Override
     public List<String> readConfigByLine(String folder) {
         List<String> result = new ArrayList<>();
@@ -215,7 +197,7 @@ public class FileReadWriteImpl implements FileReadWrite {
         return result;
     }
 
-
+    // no need
     @Override
     public String readConfigurationTxt(String folder, String txt) {
         String url = "";
@@ -223,33 +205,32 @@ public class FileReadWriteImpl implements FileReadWrite {
         String lines = "";
         FileInputStream fis = null;
 
-            try {
+        try {
 
-                fis = new FileInputStream(path);
-            } catch (FileNotFoundException e) {
-                System.out.println("Exeption read readConfigurationTxt");
-                e.printStackTrace();
-            }
-            BufferedReader br = null;
+            fis = new FileInputStream(path);
+        } catch (FileNotFoundException e) {
+            System.out.println("Exeption read readConfigurationTxt");
+            e.printStackTrace();
+        }
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(fis, "UTF8"));
+            lines = br.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
             try {
-                br = new BufferedReader(new InputStreamReader(fis, "UTF8"));
-                lines = br.readLine();
+                if (br != null) {
+                    br.close();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (br != null) {
-                        br.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
-            File file = new File(path);
-//                file.delete();
-            return lines;
+        }
+        return lines;
     }
 
+    // no need
     @Override
     public void writeToDir(String whereWrite) {
         File pathFile = new File(whereWrite);
@@ -273,8 +254,41 @@ public class FileReadWriteImpl implements FileReadWrite {
 
     }
 
+    /**
+     * @param allTask here need take main folder for know absolut TEMP directory
+     * @return all lines WebConnector.cfg in temp directory
+     */
+    @Override
+    public List<String> webConnectorConfigByLines(List<AllInformationForTask> allTask) {
+        String fullPatch = getConfigPatch(allTask);
+        fullPatch = fullPatch.concat("temp");
+        return readConfigByLine(fullPatch);
+    }
 
-    public boolean containKeyWordInDoc(Document doc, List<String> keyWords) {
+    /**
+     * @param allTask
+     * @return patch where stay webConnector
+     */
+    private String getConfigPatch(List<AllInformationForTask> allTask) {
+        String tempPach = "";
+        for (AllInformationForTask task : allTask) {
+            String customerId = task.getCustomerId();
+            for (String patch : task.getAllPatchsFiles().keySet()) {
+                System.out.println("TASK NAME " + customerId + " FILE PATCH " + patch);
+                tempPach = patch;
+            }
+        }
+        String[] split = tempPach.split("temp");
+        tempPach = split[0];
+        return tempPach;
+    }
+
+    /**
+     * @param doc      html doc use jsoup
+     * @param keyWords
+     * @return if true this is html what need
+     */
+    private boolean containKeyWordInDoc(Document doc, List<String> keyWords) {
         for (String keyWord : keyWords) {
             if (doc.text().contains(keyWord)) {
                 System.out.println("FileReadWriteImpl ");
