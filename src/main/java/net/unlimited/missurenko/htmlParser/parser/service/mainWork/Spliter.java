@@ -14,8 +14,11 @@ public class Spliter {
 
     private String codeStr;
 
-    public Spliter(String codeStr) {
+    private List<AllInformationForTask> infoListAboutTask;
+
+    public Spliter(String codeStr, List<AllInformationForTask> infoListAboutTask) {
         this.codeStr = codeStr;
+        this.infoListAboutTask = infoListAboutTask;
     }
 
     /**
@@ -45,18 +48,20 @@ public class Spliter {
         List<String> allAddList = getAllNodes(adds, "<add>", "</add>");
 
         // key patch // value key indification
-        List<AllInformationForTask> allTask = new ArrayList<>();
-        Map<String, List<String>> allFileMap = getFilesByCumtomerId(allAddList);
-        allTask = transferObjectSetIdAndFile(allFileMap);
 
-        // maybe need change
+
+        Map<String, List<String>> allFileMap = getFilesByCumtomerId(allAddList);
+        infoListAboutTask = transferObjectSetIdAndFile(allFileMap, infoListAboutTask);
+
+
         ReadCopyForIngest readCopyForIngest = new ReadCopyForIngest();
-        // must return update  List<AllInformationForTask>
-        allTask = readCopyForIngest.start(allTask);
+
+        // / must return update  List<AllInformationForTask>
+        infoListAboutTask = readCopyForIngest.start(infoListAboutTask);
 
 
         List<String> allFileList = new ArrayList<>();
-        allFileList.addAll(request.values());
+//        allFileList.addAll(request.values());
         // create all remove map
 
         Map<String, String> allRemoveMap = null;
@@ -76,19 +81,17 @@ public class Spliter {
     }
 
 
-    private List<AllInformationForTask> transferObjectSetIdAndFile(Map<String, List<String>> transfer) {
-        List<AllInformationForTask> result = new ArrayList<>();
-        for (String key : transfer.keySet()) {
-            AllInformationForTask create = new AllInformationForTask();
-            create.setCustomerId(key);
+    private List<AllInformationForTask> transferObjectSetIdAndFile(Map<String, List<String>> transfer, List<AllInformationForTask> infoListAboutTask) {
+
+        for (AllInformationForTask task : infoListAboutTask) {
+
             Map<String, String> oldAndNewPatch = new HashMap<>();
-            for (String patch : transfer.get(key)) {
+            for (String patch : transfer.get(task.getCustomerId())) {
                 oldAndNewPatch.put(patch, null);
             }
-            create.setAllPatchsFiles(oldAndNewPatch);
-            result.add(create);
+            task.setAllPatchsFiles(oldAndNewPatch);
         }
-        return result;
+        return infoListAboutTask;
     }
 
     /**

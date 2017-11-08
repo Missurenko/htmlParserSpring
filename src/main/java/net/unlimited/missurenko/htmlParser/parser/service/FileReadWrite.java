@@ -1,12 +1,10 @@
 package net.unlimited.missurenko.htmlParser.parser.service;
 
 import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public interface FileReadWrite {
@@ -20,12 +18,12 @@ public interface FileReadWrite {
      */
     boolean writeToDir(Element parseredOrigin, String path, String nameDoc);
 
-    /**
-     * @param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
-     * @param keyWord  // key CUSTOMER-RNID  value list keyWord
+    /** //allTask
+     * //@param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
+     * //@param keyWord  // key CUSTOMER-RNID  value list keyWord
      * @return map what contain  key CUSTOMER-RNID and   list documents by value
      */
-    Map<String, List<Document>> mapDocFilteredByKeyWord(Map<String, List<String>> allFiles, Map<String, List<String>> keyWord);
+    List<AllInformationForTask> mapDocFilteredByKeyWord(List<AllInformationForTask> allTask);
 
     /**
      * @param folder full patch to CFS
@@ -35,9 +33,9 @@ public interface FileReadWrite {
    /**
      *
      * @return all lines WebConnector.cfg in temp directory
-     * @param allTask here need take main folder for know absolut TEMP directory
+     *
      */
-    List<String> webConnectorConfigByLines(List<AllInformationForTask> allTask);
+    List<String> webConnectorConfigByLines();
 
 
     String readConfigurationTxt(String folder, String pathName);

@@ -75,20 +75,21 @@ public class FileReadWriteImpl implements FileReadWrite {
     }
 
     /**
-     * @param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
-     * @param keyWord  key CUSTOMER-RNID  value list keyWord
+     * //@param allFiles map what contain key  CUSTOMER-RNID  value list filePatch
+     * //@param keyWord  key CUSTOMER-RNID  value list keyWord
+     *
      * @return map what contain list documents by value and   key CUSTOMER-RNID
      */
     @Override
-    public Map<String, List<Document>> mapDocFilteredByKeyWord(Map<String, List<String>> allFiles, Map<String, List<String>> keyWord) {
-        // key customer id vlue list Documet
-        Map<String, List<Document>> result = new HashMap<>();
-        for (String keyCustomerId : allFiles.keySet()) {
-            List<File> filesForOneKeyCustomer = getFilesByPatchs(allFiles.get(keyCustomerId));
-            List<Document> resultByDoc = extractDocFromFile(filesForOneKeyCustomer, keyWord.get(keyCustomerId));
-            result.put(keyCustomerId, resultByDoc);
+    public List<AllInformationForTask> mapDocFilteredByKeyWord(List<AllInformationForTask> allTask) {
+        for (AllInformationForTask task : allTask) {
+            List<String> patchs = new ArrayList<>();
+            patchs.addAll(task.getAllPatchsFiles().keySet());
+            List<File> files = getFilesByPatchs(patchs);
+            List<Document> resultByDoc = extractDocFromFile(files, task.getKeyWords());
+            task.setDocForParsing(resultByDoc);
         }
-        return result;
+        return allTask;
     }
 
     /**
@@ -255,14 +256,11 @@ public class FileReadWriteImpl implements FileReadWrite {
     }
 
     /**
-     * @param allTask here need take main folder for know absolut TEMP directory
      * @return all lines WebConnector.cfg in temp directory
      */
     @Override
-    public List<String> webConnectorConfigByLines(List<AllInformationForTask> allTask) {
-        String fullPatch = getConfigPatch(allTask);
-        fullPatch = fullPatch.concat("temp");
-        return readConfigByLine(fullPatch);
+    public List<String> webConnectorConfigByLines() {
+        return readConfigByLine("temp");
     }
 
     /**

@@ -15,6 +15,9 @@ public class ConfigAnalise {
      */
     //TODO fix bag this [] - key &&&
     public List<AllInformationForTask> parceConfigCFG(List<String> configList) {
+
+        String portCFS = "";
+        String portApp = "";
         System.out.println("Start work condig reader");
 
         System.out.println("Read config");
@@ -24,6 +27,8 @@ public class ConfigAnalise {
         // think what change
         Map<String, AllInformationForTask> allTasksInfo = new HashMap<>();
         for (String configLine : configList) {
+
+
             if (configLine.equals("[FetchTasks]")) {
                 captionConfig = configLine;
             }
@@ -49,6 +54,8 @@ public class ConfigAnalise {
                     }
                 }
             }
+
+
             if (configLine.charAt(0) == '[') {
                 if (allTasksInfo.containsKey(configLine)) {
                     nameTask = configLine;
@@ -67,8 +74,19 @@ public class ConfigAnalise {
             if (splitLine[0].equals("IngestAction0")) {
                 allTasksInfo.get(nameTask).setCustomerId(splitLine[2]);
             }
+            if (splitLine[0].equals("IngestPort")) {
+                portApp = splitLine[1];
+            }
+            if (splitLine[0].equals("//IngestPortCFS")) {
+                portCFS = splitLine[1];
+            }
 
         }
+        AllInformationForTask infoApp = new AllInformationForTask();
+        infoApp.setCFSPort(portCFS);
+        infoApp.setServerPort(portApp);
+        infoApp.setCustomerId("localhost");
+        allTasksInfo.put("localhost",infoApp);
         List<AllInformationForTask> result = new ArrayList<>();
         result.addAll(allTasksInfo.values());
         return result;

@@ -28,23 +28,17 @@ class ReadCopyForIngest {
      * @return map key customer indification CUSTOMER-RNID    ,  value new patchs for tasks
      */
     public List<AllInformationForTask> start(List<AllInformationForTask> allTask) {
+
         FileReadWrite fileReadWrite = new FileReadWriteImpl();
-        List<String> configsWebConnector = fileReadWrite.webConnectorConfigByLines(allTask);
 
-        ConfigAnalise configAnalise = new ConfigAnalise();
-
-        List< AllInformationForTask> infoListAboutTask = configAnalise.parceConfigCFG(configsWebConnector);
-
-
-        // key CUSTOMER-RNID   value list keyWord
-        Map<String, List<String>> keyWordsByCumtomerId = keyWordByCustomerId(infoListAboutTask);
-        // key CUSTOMER-RNID   value list documents
-        Map<String, List<Document>> allDocByCumtomerId = fileReadWrite.mapDocFilteredByKeyWord(allFilesMap, keyWordsByCumtomerId);
-        // key CUSTOMER-RNID   value list parsered documents
-        Map<String, List<Document>> allParsedDocByCumtomerId = parseredDocuments(allDocByCumtomerId, keyWordsByCumtomerId);
+        // set list documents
+        allTask = fileReadWrite.mapDocFilteredByKeyWord(allTask);
+//        // write and set new patch for fetch list parsered documents
+        allTask = parseredDocuments(allTask);
 
 
-        return resultPatchAndKeyId(allParsedDocByCumtomerId, allFilesMap, fileReadWrite);
+        return null;
+//                resultPatchAndKeyId(allParsedDocByCumtomerId, allFilesMap, fileReadWrite);
     }
 
     /**
@@ -66,39 +60,41 @@ class ReadCopyForIngest {
 
 
     /**
-     * @param allDocByCumtomerId   // key CUSTOMER-RNID   value list documents
-     * @param keyWordsByCumtomerId // key CUSTOMER-RNID   value list keyWord
+     * @param allTask //@param //allDocByCumtomerId   // key CUSTOMER-RNID   value list documents
+     *                //@param //keyWordsByCumtomerId // key CUSTOMER-RNID   value list keyWord
      * @return // key CUSTOMER-RNID   value list parsered documents
      */
-    private Map<String, List<Document>> parseredDocuments(Map<String, List<Document>> allDocByCumtomerId, Map<String, List<String>> keyWordsByCumtomerId) {
-        for (String key : allDocByCumtomerId.keySet()) {
-            List<Document> docsByCustomerId = allDocByCumtomerId.get(key);
+    private List<AllInformationForTask> parseredDocuments(List<AllInformationForTask> allTask) {
+        List<String> filePatchForRemove = new ArrayList<>();
+        for (AllInformationForTask task : allTask) {
+            List<Document> docsByCustomerId = task.getDocForParsing();
             for (Document doc : docsByCustomerId) {
                 Element allElement = doc.getAllElements().first();
-                Parser parser = new Parser(allElement, keyWordsByCumtomerId.get(key), TAG_FILTER);
+                Parser parser = new Parser(allElement, task.getKeyWords(), TAG_FILTER);
                 System.out.println("Parsed element");
                 Element parseredOrigin = parser.start();
                 if (parseredOrigin == null) {
                     System.out.println("Element == null");
-                    allDocByCumtomerId.remove(key);
+//                    filePatchForRemove.add(key);
+                    //TODO how how what no save
                 }
             }
         }
-        return allDocByCumtomerId;
+        return allTask;
     }
 
-    /**
-     * @param infoListAboutTask key CUSTOMER-RNID value info about task in webConnector
-     * @return map key CUSTOMER-RNID value key word
-     */
-    private Map<String, List<String>> keyWordByCustomerId(Map<String, AllInformationForTask> infoListAboutTask) {
-        Map<String, List<String>> result = new HashMap<>();
-        for (String key : infoListAboutTask.keySet()) {
-            AllInformationForTask info = infoListAboutTask.get(key);
-            result.put(info.getCustomerId(), info.getKeyWords());
-        }
-        return result;
-    }
+//    /**
+//     * @param infoListAboutTask key CUSTOMER-RNID value info about task in webConnector
+//     * @return map key CUSTOMER-RNID value key word
+//     */
+//    private Map<String, List<String>> keyWordByCustomerId(Map<String, AllInformationForTask> infoListAboutTask) {
+//        Map<String, List<String>> result = new HashMap<>();
+//        for (String key : infoListAboutTask.keySet()) {
+//            AllInformationForTask info = infoListAboutTask.get(key);
+//            result.put(info.getCustomerId(), info.getKeyWords());
+//        }
+//        return result;
+//    }
 }
 
 /**

@@ -1,5 +1,9 @@
 package net.unlimited.missurenko.htmlParser;
 
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
+import net.unlimited.missurenko.htmlParser.parser.service.impl.FileReadWriteImpl;
+import net.unlimited.missurenko.htmlParser.parser.service.mainWork.ConfigAnalise;
 import net.unlimited.missurenko.htmlParser.parser.service.mainWork.Spliter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
 
 @SpringBootApplication
 @Controller
@@ -38,13 +44,15 @@ public class HtmlParserApplication {
     @Value("${cfs.port}")
     private String CFSPort;
 
+    private List<AllInformationForTask> infoListAboutTask;
+
     @RequestMapping(value = "/*")
     @ResponseBody
     public String proxy(HttpServletRequest request, HttpServletResponse response,
                         @RequestBody String str) throws ServletException, IOException, ParserConfigurationException, SAXException {
         String requestURI = request.getRequestURI();
         System.out.println("console log - " + requestURI);
-        Spliter spliter = new Spliter(str);
+        Spliter spliter = new Spliter(str, infoListAboutTask);
         String resultBySpliter = spliter.splitByPart();
         if (requestURI.equalsIgnoreCase("/ACTION=INGEST")) {
             String url = "http://" + CFSHost + ":" + CFSPort + requestURI;
@@ -61,8 +69,12 @@ public class HtmlParserApplication {
 
     @Bean
     public RestTemplate restTemplate() {
+        FileReadWrite fileReadWrite = new FileReadWriteImpl();
         RestTemplate restTemplate = new RestTemplate();
-
+        List<String> configsWebConnector = fileReadWrite.webConnectorConfigByLines();
+        ConfigAnalise configAnalise = new ConfigAnalise();
+        infoListAboutTask = configAnalise.parceConfigCFG(configsWebConnector);
+        infoListAboutTask.remove(0);
         return restTemplate;
     }
 

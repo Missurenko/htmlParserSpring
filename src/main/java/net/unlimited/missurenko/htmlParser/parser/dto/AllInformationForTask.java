@@ -1,18 +1,22 @@
 package net.unlimited.missurenko.htmlParser.parser.dto;
 
-import sun.plugin.dom.core.Document;
 
-import java.io.File;
-import java.util.Arrays;
+
+import org.jsoup.nodes.Document;
+
 import java.util.List;
 import java.util.Map;
 
 
 public class AllInformationForTask {
 
+    private String serverPort;
+
+    private String CFSPort;
+
     private List<String> keyWords;
 
-    private List<Document> fileForParsing;
+    private List<Document> docForParsing;
 
     private String taskName;
 
@@ -31,12 +35,12 @@ public class AllInformationForTask {
         this.keyWords = keyWords;
     }
 
-    public List<Document> getFileForParsing() {
-        return fileForParsing;
+    public List<Document> getDocForParsing() {
+        return docForParsing;
     }
 
-    public void setFileForParsing(List<Document> fileForParsing) {
-        this.fileForParsing = fileForParsing;
+    public void setDocForParsing(List<Document> docForParsing) {
+        this.docForParsing = docForParsing;
     }
 
     public String getTaskName() {
@@ -69,5 +73,21 @@ public class AllInformationForTask {
 
     public void setCustomerId(String customerId) {
         this.customerId = customerId;
+    }
+
+    public String getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(String serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    public String getCFSPort() {
+        return CFSPort;
+    }
+
+    public void setCFSPort(String CFSPort) {
+        this.CFSPort = CFSPort;
     }
 }
