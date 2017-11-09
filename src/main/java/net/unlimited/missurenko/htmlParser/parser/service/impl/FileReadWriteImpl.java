@@ -2,7 +2,7 @@ package net.unlimited.missurenko.htmlParser.parser.service.impl;
 
 //import org.apache.commons.io.FileUtils;
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -81,12 +81,12 @@ public class FileReadWriteImpl implements FileReadWrite {
      * @return map what contain list documents by value and   key CUSTOMER-RNID
      */
     @Override
-    public List<AllInformationForTask> mapDocFilteredByKeyWord(List<AllInformationForTask> allTask) {
-        for (AllInformationForTask task : allTask) {
+    public List<AllInformationForTaskDto> mapDocFilteredByKeyWord(List<AllInformationForTaskDto> allTask) {
+        for (AllInformationForTaskDto task : allTask) {
             List<String> patchs = new ArrayList<>();
             patchs.addAll(task.getAllPatchsFiles().keySet());
             List<File> files = getFilesByPatchs(patchs);
-            Map<String,Document> resultByDoc = extractDocFromFile(files, task.getKeyWords());
+            List<Document> resultByDoc = extractDocFromFile(files, task.getKeyWords());
             task.setDocForParsing(resultByDoc);
         }
         return allTask;
@@ -95,10 +95,10 @@ public class FileReadWriteImpl implements FileReadWrite {
     /**
      * @param filesForOneCustomerTask all files
      * @param keyWord                 key word for one task by key CUSTOMER-RNID
-     * @return key patch value doc
+     * @return list filtered document
      */
-    private Map<String, Document> extractDocFromFile(List<File> filesForOneCustomerTask, List<String> keyWord) {
-        Map<String, Document> resultByDoc = new HashMap<>();
+    private List<Document> extractDocFromFile(List<File> filesForOneCustomerTask, List<String> keyWord) {
+        List<Document> resultByDoc = new ArrayList<>();
         for (File file : filesForOneCustomerTask) {
             Document doc = null;
             if (file != null) {
@@ -110,7 +110,7 @@ public class FileReadWriteImpl implements FileReadWrite {
                     e.printStackTrace();
                 }
                 if (containKeyWordInDoc(doc, keyWord)) {
-                    resultByDoc.put(file.getAbsolutePath(), doc);
+                    resultByDoc.add(doc);
                 }
             }
         }
@@ -267,9 +267,9 @@ public class FileReadWriteImpl implements FileReadWrite {
      * @param allTask
      * @return patch where stay webConnector
      */
-    private String getConfigPatch(List<AllInformationForTask> allTask) {
+    private String getConfigPatch(List<AllInformationForTaskDto> allTask) {
         String tempPach = "";
-        for (AllInformationForTask task : allTask) {
+        for (AllInformationForTaskDto task : allTask) {
             String customerId = task.getCustomerId();
             for (String patch : task.getAllPatchsFiles().keySet()) {
                 System.out.println("TASK NAME " + customerId + " FILE PATCH " + patch);

@@ -1,6 +1,6 @@
 package net.unlimited.missurenko.htmlParser.parser.service;
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public interface FileReadWrite {
      * //@param keyWord  // key CUSTOMER-RNID  value list keyWord
      * @return map what contain  key CUSTOMER-RNID and   list documents by value
      */
-    List<AllInformationForTask> mapDocFilteredByKeyWord(List<AllInformationForTask> allTask);
+    List<AllInformationForTaskDto> mapDocFilteredByKeyWord(List<AllInformationForTaskDto> allTask);
 
     /**
      * @param folder full patch to CFS

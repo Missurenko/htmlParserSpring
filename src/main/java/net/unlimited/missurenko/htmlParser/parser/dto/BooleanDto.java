@@ -3,27 +3,29 @@ package net.unlimited.missurenko.htmlParser.parser.dto;
 /**
  * Created by bm on 16.10.17.
  */
+
 public class BooleanDto {
 
-
+// delete
     private boolean containeImage;
-
+// delete
     private boolean containIframeVideo;
 
+    // ok
     private boolean containH1;
-
+    // ok
     private boolean containTagA;
-
+    // ok
     private boolean containKeyWord;
-
+// delete
     private boolean containDate;
 
     private int textLenght;
-
+//????
     private int countTextBy1Depth0;
-
+// delete
     private int countTagA;
-
+// delete
     private int countTextKeyWord;
 
     private int lenghtTextInATag;
@@ -31,7 +33,7 @@ public class BooleanDto {
     private int lenghtClearText;
 
     private int countKeyWordInClearText;
-
+// delete
     private int keyWordInTagA;
 
     private boolean deleteOrNot;

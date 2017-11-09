@@ -1,7 +1,7 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -14,9 +14,9 @@ public class Spliter {
 
     private String codeStr;
 
-    private List<AllInformationForTask> infoListAboutTask;
+    private List<AllInformationForTaskDto> infoListAboutTask;
 
-    public Spliter(String codeStr, List<AllInformationForTask> infoListAboutTask) {
+    public Spliter(String codeStr, List<AllInformationForTaskDto> infoListAboutTask) {
         this.codeStr = codeStr;
         this.infoListAboutTask = infoListAboutTask;
     }
@@ -56,7 +56,7 @@ public class Spliter {
 
         ReadCopyForIngest readCopyForIngest = new ReadCopyForIngest();
 
-        // / must return update  List<AllInformationForTask>
+        // / must return update  List<AllInformationForTaskDto>
         infoListAboutTask = readCopyForIngest.start(infoListAboutTask);
 
 
@@ -81,9 +81,9 @@ public class Spliter {
     }
 
 
-    private List<AllInformationForTask> transferObjectSetIdAndFile(Map<String, List<String>> transfer, List<AllInformationForTask> infoListAboutTask) {
+    private List<AllInformationForTaskDto> transferObjectSetIdAndFile(Map<String, List<String>> transfer, List<AllInformationForTaskDto> infoListAboutTask) {
 
-        for (AllInformationForTask task : infoListAboutTask) {
+        for (AllInformationForTaskDto task : infoListAboutTask) {
 
             Map<String, String> oldAndNewPatch = new HashMap<>();
             for (String patch : transfer.get(task.getCustomerId())) {

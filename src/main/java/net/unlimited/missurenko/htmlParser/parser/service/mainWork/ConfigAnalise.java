@@ -1,7 +1,7 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 
 import java.util.*;
 
@@ -14,7 +14,7 @@ public class ConfigAnalise {
      * @return map what contain map key customer indification CUSTOMER-RNID and value keyWord for this task
      */
     //TODO fix bag this [] - key &&&
-    public List<AllInformationForTask> parceConfigCFG(List<String> configList) {
+    public List<AllInformationForTaskDto> parceConfigCFG(List<String> configList) {
 
         String portCFS = "";
         String portApp = "";
@@ -25,7 +25,7 @@ public class ConfigAnalise {
         String nameTask = "null";
 
         // think what change
-        Map<String, AllInformationForTask> allTasksInfo = new HashMap<>();
+        Map<String, AllInformationForTaskDto> allTasksInfo = new HashMap<>();
         for (String configLine : configList) {
 
 
@@ -47,7 +47,7 @@ public class ConfigAnalise {
                     nameTask = value;
                     // WARNING hete bags whis [] then stay if
                     if (!nameTask.equals("")) {
-                        AllInformationForTask task = new AllInformationForTask();
+                        AllInformationForTaskDto task = new AllInformationForTaskDto();
                         task.setTaskName(nameTask);
                         allTasksInfo.put("[" + nameTask + "]", task);
 
@@ -82,12 +82,12 @@ public class ConfigAnalise {
             }
 
         }
-        AllInformationForTask infoApp = new AllInformationForTask();
+        AllInformationForTaskDto infoApp = new AllInformationForTaskDto();
         infoApp.setCFSPort(portCFS);
         infoApp.setServerPort(portApp);
         infoApp.setCustomerId("localhost");
         allTasksInfo.put("localhost",infoApp);
-        List<AllInformationForTask> result = new ArrayList<>();
+        List<AllInformationForTaskDto> result = new ArrayList<>();
         result.addAll(allTasksInfo.values());
         return result;
     }

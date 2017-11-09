@@ -1,6 +1,6 @@
 package net.unlimited.missurenko.htmlParser;
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
 import net.unlimited.missurenko.htmlParser.parser.service.impl.FileReadWriteImpl;
 import net.unlimited.missurenko.htmlParser.parser.service.mainWork.ConfigAnalise;
@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 @SpringBootApplication
 @Controller
@@ -44,7 +43,7 @@ public class HtmlParserApplication {
     @Value("${cfs.port}")
     private String CFSPort;
 
-    private List<AllInformationForTask> infoListAboutTask;
+    private List<AllInformationForTaskDto> infoListAboutTask;
 
     @RequestMapping(value = "/*")
     @ResponseBody
@@ -69,15 +68,14 @@ public class HtmlParserApplication {
 
     @Bean
     public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
 
+        RestTemplate restTemplate = new RestTemplate();
 
         FileReadWrite fileReadWrite = new FileReadWriteImpl();
         List<String> configsWebConnector = fileReadWrite.webConnectorConfigByLines();
         ConfigAnalise configAnalise = new ConfigAnalise();
         infoListAboutTask = configAnalise.parceConfigCFG(configsWebConnector);
         infoListAboutTask.remove(0);
-
         return restTemplate;
     }
 

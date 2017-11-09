@@ -1,7 +1,7 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 
-import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTask;
+import net.unlimited.missurenko.htmlParser.parser.dto.AllInformationForTaskDto;
 import net.unlimited.missurenko.htmlParser.parser.service.FileReadWrite;
 import net.unlimited.missurenko.htmlParser.parser.service.impl.FileReadWriteImpl;
 import org.jsoup.nodes.Document;
@@ -24,10 +24,10 @@ class ReadCopyForIngest {
     }
 
     /**
-     * @param allTask now contain customer indification CUSTOMER-RNID    ,  map where  oldfilePatchs key
-     * @return map key customer indification CUSTOMER-RNID    ,  value new patchs for tasks
+     * @param allTask DTO
+     * @return DTO what contain new file patch for change in fetch task
      */
-    public List<AllInformationForTask> start(List<AllInformationForTask> allTask) {
+    public List<AllInformationForTaskDto> start(List<AllInformationForTaskDto> allTask) {
 
         FileReadWrite fileReadWrite = new FileReadWriteImpl();
 
@@ -42,7 +42,7 @@ class ReadCopyForIngest {
     }
 
     /**
-     * @param allDocByCumtomerId // key CUSTOMER-RNID   value list parsered documents
+     * @param allDocByCumtomerId
      * @param allFilesMap        map key customer indification CUSTOMER-RNID    ,  value list filePatchs
      * @param fileReadWrite      object for write
      * @return map key CUSTOMER-RNID , value new fullPatch file
@@ -60,52 +60,26 @@ class ReadCopyForIngest {
 
 
     /**
-     * @param allTask //@param //allDocByCumtomerId   // key CUSTOMER-RNID   value list documents
-     *                //@param //keyWordsByCumtomerId // key CUSTOMER-RNID   value list keyWord
-     * @return // key CUSTOMER-RNID   value list parsered documents
+     * @param allTask /DTO  AllInformationForTaskDto
+     * @return add to DTo map filePatch value parsered documents
      */
-    private List<AllInformationForTask> parseredDocuments(List<AllInformationForTask> allTask) {
-        for (AllInformationForTask task : allTask) {
-            Map<String, Document> docsByCustomerId = task.getDocForParsing();
-            for (String key : docsByCustomerId.keySet()) {
-                Document doc = docsByCustomerId.get(key);
+    private List<AllInformationForTaskDto> parseredDocuments(List<AllInformationForTaskDto> allTask) {
+        List<String> filePatchForRemove = new ArrayList<>();
+        for (AllInformationForTaskDto task : allTask) {
+            List<Document> docsByCustomerId = task.getDocForParsing();
+            for (Document doc : docsByCustomerId) {
                 Element allElement = doc.getAllElements().first();
                 Parser parser = new Parser(allElement, task.getKeyWords(), TAG_FILTER);
                 System.out.println("Parsed element");
                 Element parseredOrigin = parser.start();
                 if (parseredOrigin == null) {
                     System.out.println("Element == null");
-                    docsByCustomerId.put(key, null);
+//                    filePatchForRemove.add(key);
+                    //TODO how how what no save
                 }
             }
         }
         return allTask;
     }
 
-//    /**
-//     * @param infoListAboutTask key CUSTOMER-RNID value info about task in webConnector
-//     * @return map key CUSTOMER-RNID value key word
-//     */
-//    private Map<String, List<String>> keyWordByCustomerId(Map<String, AllInformationForTask> infoListAboutTask) {
-//        Map<String, List<String>> result = new HashMap<>();
-//        for (String key : infoListAboutTask.keySet()) {
-//            AllInformationForTask info = infoListAboutTask.get(key);
-//            result.put(info.getCustomerId(), info.getKeyWords());
-//        }
-//        return result;
-//    }
 }
-
-/**
- * some part code for create new folders by task name
- * //        String fullDir = "";
- * //        String[] splitDir = dir.split("\\\\");
- * //        for (int i = 0; i < splitDir.length - 1; i++) {
- * //            if (fullDir.equals("")) {
- * //                fullDir = splitDir[0];
- * //            } else {
- * //                fullDir = fullDir.concat("/" + splitDir[i]);
- * //            }
- * //        }
- * <p>
- */

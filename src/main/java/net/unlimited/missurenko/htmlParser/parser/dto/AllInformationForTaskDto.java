@@ -1,21 +1,22 @@
 package net.unlimited.missurenko.htmlParser.parser.dto;
 
 
+
 import org.jsoup.nodes.Document;
 
 import java.util.List;
 import java.util.Map;
 
 
-public class AllInformationForTask {
+public class AllInformationForTaskDto {
 
     private String serverPort;
 
     private String CFSPort;
 
     private List<String> keyWords;
-    // old patch document
-    private Map<String, Document> docForParsing;
+
+    private List<Document> docForParsing;
 
     private String taskName;
 
@@ -34,11 +35,11 @@ public class AllInformationForTask {
         this.keyWords = keyWords;
     }
 
-    public Map<String, Document> getDocForParsing() {
+    public List<Document> getDocForParsing() {
         return docForParsing;
     }
 
-    public void setDocForParsing(Map<String, Document> docForParsing) {
+    public void setDocForParsing(List<Document> docForParsing) {
         this.docForParsing = docForParsing;
     }
 
