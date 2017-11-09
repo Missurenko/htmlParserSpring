@@ -65,18 +65,17 @@ class ReadCopyForIngest {
      * @return // key CUSTOMER-RNID   value list parsered documents
      */
     private List<AllInformationForTask> parseredDocuments(List<AllInformationForTask> allTask) {
-        List<String> filePatchForRemove = new ArrayList<>();
         for (AllInformationForTask task : allTask) {
-            List<Document> docsByCustomerId = task.getDocForParsing();
-            for (Document doc : docsByCustomerId) {
+            Map<String, Document> docsByCustomerId = task.getDocForParsing();
+            for (String key : docsByCustomerId.keySet()) {
+                Document doc = docsByCustomerId.get(key);
                 Element allElement = doc.getAllElements().first();
                 Parser parser = new Parser(allElement, task.getKeyWords(), TAG_FILTER);
                 System.out.println("Parsed element");
                 Element parseredOrigin = parser.start();
                 if (parseredOrigin == null) {
                     System.out.println("Element == null");
-//                    filePatchForRemove.add(key);
-                    //TODO how how what no save
+                    docsByCustomerId.put(key, null);
                 }
             }
         }

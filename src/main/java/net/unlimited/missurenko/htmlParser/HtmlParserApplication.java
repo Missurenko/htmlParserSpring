@@ -69,12 +69,15 @@ public class HtmlParserApplication {
 
     @Bean
     public RestTemplate restTemplate() {
-        FileReadWrite fileReadWrite = new FileReadWriteImpl();
         RestTemplate restTemplate = new RestTemplate();
+
+
+        FileReadWrite fileReadWrite = new FileReadWriteImpl();
         List<String> configsWebConnector = fileReadWrite.webConnectorConfigByLines();
         ConfigAnalise configAnalise = new ConfigAnalise();
         infoListAboutTask = configAnalise.parceConfigCFG(configsWebConnector);
         infoListAboutTask.remove(0);
+
         return restTemplate;
     }
 
