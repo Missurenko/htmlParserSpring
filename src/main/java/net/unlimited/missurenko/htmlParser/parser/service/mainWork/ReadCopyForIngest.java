@@ -37,22 +37,23 @@ class ReadCopyForIngest {
         allTask = parseredDocuments(allTask);
 
 
-        return null;
-//                resultPatchAndKeyId(allParsedDocByCumtomerId, allFilesMap, fileReadWrite);
+        return resultPatchAndKeyId(allTask, fileReadWrite);
+
+
     }
 
     /**
-     * @param allDocByCumtomerId
-     * @param allFilesMap        map key customer indification CUSTOMER-RNID    ,  value list filePatchs
-     * @param fileReadWrite      object for write
+     * @param fileReadWrite object for write
      * @return map key CUSTOMER-RNID , value new fullPatch file
      */
-    private Map<String, List<String>> resultPatchAndKeyId(Map<String, List<Document>> allDocByCumtomerId, Map<String, List<String>> allFilesMap, FileReadWrite fileReadWrite) {
-        for (String key : allDocByCumtomerId.keySet()) {
-            List<Document> parseredDocsByCustomerId = allDocByCumtomerId.get(key);
-            for (Document doc : parseredDocsByCustomerId) {
+    private List<AllInformationForTaskDto> resultPatchAndKeyId(List<AllInformationForTaskDto> allTask, FileReadWrite fileReadWrite) {
+        for (AllInformationForTaskDto info : allTask) {
+            List<Document> allDoc = info.getDocForParsing();
 
-//                fileReadWrite.writeToDir(doc,);
+// full patch
+            for (Document doc : allDoc) {
+
+                fileReadWrite.writeToDir(doc,"C:\\HewlettPackardEnterprise\\IDOLServer-11.3.0\\webconnector\\Parsered\\2d8585bd0e25c91ecf3584f3369bdc2e.html" );
             }
         }
         return null;
@@ -64,9 +65,10 @@ class ReadCopyForIngest {
      * @return add to DTo map filePatch value parsered documents
      */
     private List<AllInformationForTaskDto> parseredDocuments(List<AllInformationForTaskDto> allTask) {
-        List<String> filePatchForRemove = new ArrayList<>();
+
         for (AllInformationForTaskDto task : allTask) {
             List<Document> docsByCustomerId = task.getDocForParsing();
+            List<Element> allParseredDoc = new ArrayList<>();
             for (Document doc : docsByCustomerId) {
                 Element allElement = doc.getAllElements().first();
                 Parser parser = new Parser(allElement, task.getKeyWords(), TAG_FILTER);
@@ -74,8 +76,10 @@ class ReadCopyForIngest {
                 Element parseredOrigin = parser.start();
                 if (parseredOrigin == null) {
                     System.out.println("Element == null");
-//                    filePatchForRemove.add(key);
+                    allParseredDoc.add(null);
                     //TODO how how what no save
+                } else {
+                    allParseredDoc.add(parseredOrigin);
                 }
             }
         }

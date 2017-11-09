@@ -32,7 +32,12 @@ public class Spliter {
     public String splitByPart() throws IOException, ParserConfigurationException, SAXException {
 
         String urlDecoder = java.net.URLDecoder.decode(codeStr, "UTF-8");
+
         String splitByNoNeed = splitReturnByNumber(urlDecoder, "&adds=", 1);
+
+        // разделить если прийдет только ремуве и если прийдет только адд
+
+
         String[] splitResult = splitReturn(splitByNoNeed, "&removedocs=");
         String adds = splitResult[0];
         String removes = null;

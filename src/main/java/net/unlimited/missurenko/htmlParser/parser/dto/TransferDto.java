@@ -4,23 +4,23 @@ import java.util.List;
 
 public class TransferDto {
 
-    private List<Boolean> delete;
+    private List<Boolean> deleteList;
 
-    private int countFalse;
+    private boolean endRecursion;
 
-    public List<Boolean> getDelete() {
-        return delete;
+    public List<Boolean> getDeleteList() {
+        return deleteList;
     }
 
-    public void setDelete(List<Boolean> delete) {
-        this.delete = delete;
+    public void setDeleteList(List<Boolean> deleteList) {
+        this.deleteList = deleteList;
     }
 
-    public int getCountFalse() {
-        return countFalse;
+    public boolean isEndRecursion() {
+        return endRecursion;
     }
 
-    public void setCountFalse(int countFalse) {
-        this.countFalse = countFalse;
+    public void setEndRecursion(boolean endRecursion) {
+        this.endRecursion = endRecursion;
     }
 }

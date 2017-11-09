@@ -53,6 +53,7 @@ public class FileReadWriteImpl implements FileReadWrite {
     @Override
     public boolean writeToDir(Element parseredOrigin, String nameDoc) {
         File pathFile = new File(nameDoc);
+
         PrintStream out = null;
         try {
             System.out.println("writeToDir name: dir" + nameDoc);
@@ -286,6 +287,7 @@ public class FileReadWriteImpl implements FileReadWrite {
      * @param keyWords
      * @return if true this is html what need
      */
+    //TODO exeption
     private boolean containKeyWordInDoc(Document doc, List<String> keyWords) {
         for (String keyWord : keyWords) {
             if (doc.text().contains(keyWord)) {

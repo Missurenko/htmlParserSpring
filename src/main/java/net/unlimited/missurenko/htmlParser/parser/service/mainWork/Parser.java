@@ -1,12 +1,12 @@
 package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 import net.unlimited.missurenko.htmlParser.parser.dto.BooleanDto;
-import net.unlimited.missurenko.htmlParser.parser.dto.RecursiaForTagADto;
+import net.unlimited.missurenko.htmlParser.parser.dto.TransferDto;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 
 /**
@@ -34,28 +34,51 @@ public class Parser {
     private void recursiveMetod(Element mainElement) {
 
         parserBooleanSupport.deleteHeaderFoaterTags(mainElement, filterTag);
-        List<Boolean> whatDelete = new ArrayList<>();
+        TransferDto transferDto = new TransferDto();
         BooleanDto booleanDtoParant = parserBooleanSupport.booleanMetodGlobal(mainElement, keyWordList);
         if (mainElement.children().size() > 1) {
-            if (!mainElement.tag().toString().equals("head") &
-                    !mainElement.tag().toString().equals("html") &
-                    !mainElement.tag().toString().equals("#root")) {
-                List<BooleanDto> booleanDtoChilds = new ArrayList<>();
-                for (Element child : mainElement.children()) {
+//            if (!mainElement.tag().toString().equals("head") &
+//                    !mainElement.tag().toString().equals("html") &
+//                    !mainElement.tag().toString().equals("#root")) {
+            List<BooleanDto> booleanDtoChilds = new ArrayList<>();
+            for (Element child : mainElement.children()) {
 
-                    BooleanDto childDto = parserBooleanSupport.booleanMetodGlobal(child, keyWordList);
-                    booleanDtoChilds.add(childDto);
-                }
-
+                BooleanDto childDto = parserBooleanSupport.booleanMetodGlobal(child, keyWordList);
+                booleanDtoChilds.add(childDto);
+            }
 // return list true false what need delete
-                whatDelete = flagForDalete(booleanDtoParant, booleanDtoChilds);
+            transferDto = flagForDalete(booleanDtoParant, booleanDtoChilds, mainElement);
 
+            for (int i = 0; i < mainElement.children().size(); i++) {
+                Element child = mainElement.child(i);
+                if (child.tag().toString().equals("head")) {
+                    List<Boolean> deleteList = transferDto.getDeleteList();
+                    deleteList.set(i, false);
+                    transferDto.setDeleteList(deleteList);
+                }
+            }
+
+// /            }else {
+//                for(Element child: mainElement.children()){
+//                    List<Boolean>
+//                }
+//            }
+        } else {
+            transferDto.setDeleteList(Arrays.asList(false));
+        }
+
+        if (!transferDto.isEndRecursion()) {
+            List<Boolean> whatDelete = transferDto.getDeleteList();
+            parserBooleanSupport.deleteOnly(mainElement, whatDelete);
+            for (Element child : mainElement.children()) {
+                if (!child.tag().toString().equals("head")) {
+                    recursiveMetod(child);
+                }
             }
         }
 
-        parserBooleanSupport.deleteOnly(mainElement, whatDelete);
-
-        int countForEnd = 0;
+    }
+//        int countForEnd = 0;
 
 //        // count false flag for know go deap or not
 //        int coutnFalseGoDeepOrNot = 0;
@@ -79,23 +102,22 @@ public class Parser {
 //                }
 //            }
 //        }
-        // this cout how many stay child in main element and if you have more then two go deeper
-        for (Element child : mainElement.children()) {
-            if (!child.tag().toString().equals("head")) {
-                countForEnd++;
-            }
-        }
-// tommorow need understand why no work this part of code
-        if (countForEnd < 2 & htmlTagMetod(mainElement)) {
-            for (Element child : mainElement.children()) {
-                if (!child.tag().toString().equals("head")) {
-                    recursiveMetod(child);
-                }
-            }
-        }
+    // this cout how many stay child in main element and if you have more then two go deeper
+//        for (Element child : mainElement.children()) {
+//            if (!child.tag().toString().equals("head")) {
+//                countForEnd++;
+//            }
+//        }
+//// tommorow need understand why no work this part of code
+//        if (countForEnd < 2 & htmlTagMetod(mainElement)) {
+//            for (Element child : mainElement.children()) {
+//                if (!child.tag().toString().equals("head")) {
 
+//                }
+//            }
 
-    }
+//        }
+
 
     // завязан на основний елемент в филдах
     private boolean htmlTagMetod(Element mainElement) {
@@ -116,9 +138,9 @@ public class Parser {
     }
 
     // основной метод для виставление флагов чтоб потом удалить
-    private List<Boolean> flagForDalete(BooleanDto booleanDtoParant, List<BooleanDto> booleanDtoChildList) {
+    private TransferDto flagForDalete(BooleanDto booleanDtoParant, List<BooleanDto> booleanDtoChildList, Element mainElement) {
         List<Boolean> result = new ArrayList<>();
-
+        TransferDto transferDto = new TransferDto();
         // if I have DTO why I need fields ????
         int lenght = 0;
         int lenghtTagA = 0;
@@ -134,7 +156,9 @@ public class Parser {
             // если чистого текста больше чем позиции с чистим текстом ставим такую позицию
             if (lenghtClearText < parserBooleanSupport.cleanText(lenght, lenghtTagA)) {
                 lenghtClearText = parserBooleanSupport.cleanText(lenght, lenghtTagA);
-                positionMoreCleanText = i;
+                if (child.getCountKeyWordInClearText() > 0) {
+                    positionMoreCleanText = i;
+                }
             }
             // если содержит Н1 или Н2 то ставим позицию
             if (child.isContainH1()) {
@@ -163,107 +187,119 @@ public class Parser {
                         moreTextThenOther.getCountKeyWordInClearText() > 0 &
                         moreTextThenOther.isContainH1()) {
                     result.set(positionMoreCleanText, false);
-                    falseFlag++;
+                    transferDto.setDeleteList(result);
+                    return transferDto;
+                } else {
+                    transferDto.setEndRecursion(true);
+                    parserBooleanSupport.deleteAllTagA(mainElement);
                 }
-                // если позиция с больше всего текстом true и флагов с false 0 то
-                if (result.get(positionMoreCleanText) & falseFlag == 0) {
-                    for (int i = firstPositionH1; i < positionMoreCleanText + 1; i++) {
-                        // TODO сделать рекурсию для удаление все наследников с тагом <a
-                        // think here do recurthin more deep
-                        result.set(i, false);
-                        falseFlag++;
-                    }
-
-                    boolean end = false;
-                    for (int i = positionMoreCleanText + 1; i < result.size() + 1; i++) {
-                        BooleanDto child = booleanDtoChildList.get(i);
-                        // если чистого текста больше чем ключевих слов в тагазх ???
-                        // TODO изменить сдесь хрень полнейшая
-                        //
-                        if (child.getLenghtClearText() > child.getKeyWordInTagA() &
-                                !end) {
-                            result.set(i, false);
-                            falseFlag++;
-                        } else {
-                            end = true;
-                        }
-                    }
-                }
-            }
-        } else {
-            return result;
-        }
-        // if тут ждем разделение пока не разделиться Н1 и больше всего чистого текста
-        if (booleanDtoParant.isContainH1() &
-                moreTextThenOther.getCountKeyWordInClearText() > 0 &
-                moreTextThenOther.isContainH1()) {
-            result.set(positionMoreCleanText, false);
-            falseFlag++;
-
-        } else {
-            // если наследник имее Н! и больше всего текста  протеворечит верхнему
-            if (booleanDtoChildList.get(positionMoreCleanText).isContainH1()) {
-                for (int i = 0; i < positionMoreCleanText + 1; i++) {
-                    result.set(i, false);
-                    falseFlag++;
-                }
-                // если больше всего текста находиться на позииции меньше чем максимальная длина наследников +1 думаю убрать
-                if (result.size() > positionMoreCleanText + 1) {
-                    result.set(positionMoreCleanText + 1, false);
-                    falseFlag++;
-                }
-                // фор сделан глупо если  переделать в последствии на рекурсию если чистго текста меньше чем с а
-                for (int i = positionMoreCleanText + 2; i < booleanDtoChildList.size(); i++) {
-                    if (parserBooleanSupport.cleanText(booleanDtoChildList.get(i).getTextLenght(),
-                            booleanDtoChildList.get(i).getLenghtTextInATag()) > 0) {
-                        result.set(i, false);
-                    } else {
-                        break;
-                    }
-                }
-                // если Там где бальше всего текста содержит Н1 и
-                // и больше всего текста содержит ключевих слов больше 0
-                // ищем первую позицию где есть Н1 нужно подумать как использивать
-            } else if (!booleanDtoChildList.get(positionMoreCleanText).isContainH1() &
-                    moreTextThenOther.getCountTextKeyWord() > 0 |
-                    countH1H2 > 1 & moreTextThenOther.getCountTextKeyWord() > 0) {
-                int position = -1;
-                for (int i = 0; i < booleanDtoChildList.size(); i++) {
-
-                    if (booleanDtoChildList.get(i).isContainH1() &
-                            position == -1) {
-                        position = i;
-                    }
-                }
-                // фолсе между больше всего текста и Н1 Думаю нужно просто дойти до разделение и рекурсией убрать все <a таг
-                for (int i = position; i < positionMoreCleanText; i++) {
-                    result.set(i, false);
-                    falseFlag++;
-                }
-            }
-            String ss = "ss";
-        }
-
-
-        //сли фолсе флаг больше 0
-        if (falseFlag > 1) {
-            for (int i = 0; i < booleanDtoChildList.size(); i++) {
-                // зачемто беру длину
-                // длину <a таг
-                // и длину чистого текста
-                //  и сечу значения
-                lenght = booleanDtoChildList.get(i).getTextLenght();
-                lenghtTagA = booleanDtoChildList.get(i).getLenghtTextInATag();
-                lenghtClearText = lenght - lenghtTagA;
-                // и если чистого тексста меньше то ставлю фолсе
-                if (lenghtClearText < lenghtTagA) {
-                    result.set(i, true);
-                }
-                result.set(positionMoreCleanText, false);
+            } else {
+                transferDto.setEndRecursion(true);
+                parserBooleanSupport.deleteAllTagA(mainElement);
             }
         }
-        return result;
+        transferDto.setDeleteList(result);
+        return transferDto;
     }
+    // если позиция с больше всего текстом true и флагов с false 0 то
+//                if (result.get(positionMoreCleanText) & falseFlag == 0) {
+//                    for (int i = firstPositionH1; i < positionMoreCleanText + 1; i++) {
+//                        // TODO сделать рекурсию для удаление все наследников с тагом <a
+//                        // think here do recurthin more deep
+//                        result.set(i, false);
+//                        falseFlag++;
+//                    }
+//
+//                    boolean end = false;
+//                    for (int i = positionMoreCleanText + 1; i < result.size() + 1; i++) {
+//                        BooleanDto child = booleanDtoChildList.get(i);
+//                        // если чистого текста больше чем ключевих слов в тагазх ???
+//                        // TODO изменить сдесь хрень полнейшая
+//                        //
+//                        if (child.getLenghtClearText() > child.getKeyWordInTagA() &
+//                                !end) {
+//                            result.set(i, false);
+//                            falseFlag++;
+//                        } else {
+//                            end = true;
+//                        }
+//                    }
+//                }
+//            }
+//        } else {
+//            return result;
+//        }
+    // if тут ждем разделение пока не разделиться Н1 и больше всего чистого текста
+//        if (booleanDtoParant.isContainH1() &
+//                moreTextThenOther.getCountKeyWordInClearText() > 0 &
+//                moreTextThenOther.isContainH1()) {
+//            result.set(positionMoreCleanText, false);
+//            falseFlag++;
+//
+//        } else {
+//            // если наследник имее Н! и больше всего текста  протеворечит верхнему
+//            if (booleanDtoChildList.get(positionMoreCleanText).isContainH1()) {
+//                for (int i = 0; i < positionMoreCleanText + 1; i++) {
+//                    result.set(i, false);
+//                    falseFlag++;
+//                }
+//                // если больше всего текста находиться на позииции меньше чем максимальная длина наследников +1 думаю убрать
+//                if (result.size() > positionMoreCleanText + 1) {
+//                    result.set(positionMoreCleanText + 1, false);
+//                    falseFlag++;
+//                }
+//                // фор сделан глупо если  переделать в последствии на рекурсию если чистго текста меньше чем с а
+//                for (int i = positionMoreCleanText + 2; i < booleanDtoChildList.size(); i++) {
+//                    if (parserBooleanSupport.cleanText(booleanDtoChildList.get(i).getTextLenght(),
+//                            booleanDtoChildList.get(i).getLenghtTextInATag()) > 0) {
+//                        result.set(i, false);
+//                    } else {
+//                        break;
+//                    }
+//                }
+//                // если Там где бальше всего текста содержит Н1 и
+//                // и больше всего текста содержит ключевих слов больше 0
+//                // ищем первую позицию где есть Н1 нужно подумать как использивать
+//            } else if (!booleanDtoChildList.get(positionMoreCleanText).isContainH1() &
+//                    moreTextThenOther.getCountTextKeyWord() > 0 |
+//                    countH1H2 > 1 & moreTextThenOther.getCountTextKeyWord() > 0) {
+//                int position = -1;
+//                for (int i = 0; i < booleanDtoChildList.size(); i++) {
+//
+//                    if (booleanDtoChildList.get(i).isContainH1() &
+//                            position == -1) {
+//                        position = i;
+//                    }
+//                }
+//                // фолсе между больше всего текста и Н1 Думаю нужно просто дойти до разделение и рекурсией убрать все <a таг
+//                for (int i = position; i < positionMoreCleanText; i++) {
+//                    result.set(i, false);
+//                    falseFlag++;
+//                }
+//            }
+//            String ss = "ss";
+//        }
+
+
+    //сли фолсе флаг больше 0
+//        if (falseFlag > 1) {
+//            for (int i = 0; i < booleanDtoChildList.size(); i++) {
+//                // зачемто беру длину
+//                // длину <a таг
+//                // и длину чистого текста
+//                //  и сечу значения
+//                lenght = booleanDtoChildList.get(i).getTextLenght();
+//                lenghtTagA = booleanDtoChildList.get(i).getLenghtTextInATag();
+//                lenghtClearText = lenght - lenghtTagA;
+//                // и если чистого тексста меньше то ставлю фолсе
+//                if (lenghtClearText < lenghtTagA) {
+//                    result.set(i, true);
+//                }
+//                result.set(positionMoreCleanText, false);
+//            }
+//        }
+
+
 }
 
 

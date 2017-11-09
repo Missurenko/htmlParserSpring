@@ -2,6 +2,7 @@ package net.unlimited.missurenko.htmlParser.parser.service.mainWork;
 
 import net.unlimited.missurenko.htmlParser.parser.dto.BooleanDto;
 import net.unlimited.missurenko.htmlParser.parser.dto.RecursiaForTagADto;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
@@ -23,15 +24,22 @@ class ParserBooleanSupport {
             }
         }
     }
+
     // this metod like deleteByFlag
     void deleteOnly(Element mainElement, List<Boolean> whatDelete) {
-        for (int i = whatDelete.size() - 1; i >= 0; --i) {
-            if (whatDelete.get(i)) {
-                mainElement.child(i).remove();
-
+        try {
+            for (int i = whatDelete.size() - 1; i >= 0; --i) {
+                if (whatDelete.get(i)) {
+                    if (!mainElement.child(i).tag().toString().equals("head")) {
+                        mainElement.child(i).remove();
+                    }
+                }
             }
+        } catch (IndexOutOfBoundsException e) {
+            String ss = "ss";
         }
     }
+
     // ищем содержимое <a таг
     private boolean containTagAByThreeDepth(RecursiaForTagADto recursiaForTagADto) {
 // если глубина 3
@@ -55,6 +63,13 @@ class ParserBooleanSupport {
         }
 
     }
+
+    private boolean containTagA(Element element) {
+        return null != element.parent() &
+                element.tag().toString().equals("a");
+    }
+
+
     // если родитель содержит таг и имеиит родителя
     private boolean containParantThisTagA(Element element) {
         return null != element.parent() &
@@ -67,6 +82,7 @@ class ParserBooleanSupport {
         return element.getElementsByTag("h1").size() != 0 |
                 element.getElementsByTag("h2").size() != 0;
     }
+
     // если у хотяби одного наследника есть img то будет true
     private boolean containeImage(Element element) {
         return element.getElementsByTag("img").size() != 0;
@@ -78,7 +94,7 @@ class ParserBooleanSupport {
     }
 
     // содержит ли ключевие слова
-    boolean containKeyWord(Element element,List<String> keyWordList) {
+    boolean containKeyWord(Element element, List<String> keyWordList) {
         for (String keyWord : keyWordList) {
             if (element.text().contains(keyWord)) {
                 return true;
@@ -97,7 +113,7 @@ class ParserBooleanSupport {
     private boolean takeFlagsForDeleteByFilters(Element child, List<String> filterTag) {
         boolean flag = true;
         // if contain tag script,noscript, style
-        if (flagDeleteNoNeedTags(child,filterTag)) {
+        if (flagDeleteNoNeedTags(child, filterTag)) {
             return true;
         }
         // if contain css
@@ -121,6 +137,7 @@ class ParserBooleanSupport {
         }
         return false;
     }
+
     private boolean containTagHeaderBody(Element mainElement, Element child) {
         return mainElement.tag().toString().equals("body") &
                 child.tag().toString().equals("header") |
@@ -131,7 +148,7 @@ class ParserBooleanSupport {
     /**
      * @param mainElement html what do parsing
      */
-    private void deleteMetod(Element mainElement,List<String> filterTag) {
+    private void deleteMetod(Element mainElement, List<String> filterTag) {
         List<Boolean> flagDeleteOrNot = new ArrayList<>();
         for (int i = 0; i < mainElement.children().size(); i++) {
             // take flag for delete
@@ -141,24 +158,25 @@ class ParserBooleanSupport {
         // do function deleting
         deleteByFlag(mainElement, flagDeleteOrNot);
     }
+
     /**
      * have short recurtion
      *
      * @param mainElement
      */
-    private void shortRecursive(Element mainElement,List<String> filterTag) {
+    private void shortRecursive(Element mainElement, List<String> filterTag) {
 
-        deleteMetod(mainElement,filterTag);
+        deleteMetod(mainElement, filterTag);
         for (Element child : mainElement.children()) {
-            shortRecursive(child,filterTag);
+            shortRecursive(child, filterTag);
         }
     }
+
     /**
-     *
      * @param mainElement parsered html
-     * metod delete tags, header, footer
+     *                    metod delete tags, header, footer
      */
-    void deleteHeaderFoaterTags(Element mainElement,List<String> filterTag) {
+    void deleteHeaderFoaterTags(Element mainElement, List<String> filterTag) {
         List<Boolean> deleteBlockList = new ArrayList<>();
         for (Element child : mainElement.children()) {
             if (containTagHeaderBody(mainElement, child)) {
@@ -169,13 +187,13 @@ class ParserBooleanSupport {
                 deleteBlockList.add(false);
             }
             if (child.tag().toString().equals("head")) {
-                shortRecursive(child,filterTag);
+                shortRecursive(child, filterTag);
             }
         }
         deleteOnly(mainElement, deleteBlockList);
     }
+
     /**
-     *
      * @param lenghtAllText
      * @param lenghtTextTagA
      * @return
@@ -185,7 +203,7 @@ class ParserBooleanSupport {
     }
 
     // this metod count all position what can be use for understand about what block need stay alive
-    BooleanDto booleanMetodGlobal(Element mainElement,List<String> keyWordList) {
+    BooleanDto booleanMetodGlobal(Element mainElement, List<String> keyWordList) {
         BooleanDto booleanDto = new BooleanDto();
 
         if (mainElement.tag().toString().equals("head")) {
@@ -198,10 +216,33 @@ class ParserBooleanSupport {
 //        if (!noHaveDateFlag(mainElement)) {
 //            booleanDto.setContainDate(true);
 //        }
-        countForBoolen(mainElement, booleanDto,keyWordList);
+        countForBoolen(mainElement, booleanDto, keyWordList);
         booleanDto.setTextLenght(mainElement.text().length());
         return booleanDto;
     }
+
+    void deleteAllTagA(Element mainElement) {
+        List<Boolean> delete = new ArrayList<>();
+
+        for (Element child : mainElement.children()) {
+
+            if (containTagA(child)) {
+                delete.add(true);
+            } else {
+                delete.add(false);
+            }
+            if (delete.size() == 0) {
+                String ss = "ss";
+            }
+        }
+        if (delete.size() != 0) {
+            deleteOnly(mainElement, delete);
+        }
+        for (Element childRecursia : mainElement.children()) {
+            deleteAllTagA(childRecursia);
+        }
+    }
+
 
     // TODO возможно поменять на дерево
     // не очень ефективний способ получить всех наследников
@@ -226,7 +267,7 @@ class ParserBooleanSupport {
     }
 
     // метод которий считает таг keyWord Text and other
-    private void countForBoolen(Element element, BooleanDto booleanDto,List<String> keyWordList) {
+    private void countForBoolen(Element element, BooleanDto booleanDto, List<String> keyWordList) {
 
         Element clone = element.clone();
         List<Element> elementDepthOne = recursiveMetodGetAllChildByDepth0(clone, new ArrayList<>());
