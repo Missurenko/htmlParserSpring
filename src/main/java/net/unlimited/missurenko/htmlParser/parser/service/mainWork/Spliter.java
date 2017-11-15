@@ -53,6 +53,11 @@ public class Spliter {
         List<String> allAddList = getAllNodes(adds, "<add>", "</add>");
 
         // key patch // value key indification
+        List<String> allFilePatchs = new ArrayList<>();
+        for (String add : allAddList) {
+            String filePatch = patchForAddFetch(add);
+            allFilePatchs.add(filePatch);
+        }
 
 
         Map<String, List<String>> allFileMap = getFilesByCumtomerId(allAddList);
@@ -64,24 +69,52 @@ public class Spliter {
         // / must return update  List<AllInformationForTaskDto>
         infoListAboutTask = readCopyForIngest.start(infoListAboutTask);
 
+        Map<String, String> allAddMap = doInfoByKeyValue(allFilePatchs, allAddList);
 
-        List<String> allFileList = new ArrayList<>();
-//        allFileList.addAll(request.values());
-        // create all remove map
+        // need for change folder where write html file
+//        Map<String, String> addMapNewPatch = changeSourceFilenameForAdd(allAddMap, infoListAboutTask);
+// here problem to
+//        Map<String, String> addWhisNewPatch = changeFilePatchForAdd(addMapNewPatch);
+
 
         Map<String, String> allRemoveMap = null;
         if (removes != null) {
             // take all remove from fetch
             List<String> allRemoveList = getAllNodes(removes, "<remove>", "</remove>");
-            allRemoveMap = doInfoByKeyValue(allFileList, allRemoveList);
+            allRemoveMap = doInfoByKeyValue(allFilePatchs, allRemoveList);
         }
 
-
-        Map<String, String> allAddMap = doInfoByKeyValue(allFileList, allAddList);
 
         String result = concatAndEncodeString(allAddMap, allRemoveMap);
 
         String xmlText = "";
+        return result;
+    }
+
+    /**
+     * @param allAddMap         map what contain key filePatch value String add
+     * @param infoListAboutTask contain map whas old and new patch
+     * @return changed add whis new source patch file location
+     */
+    // change allInfo to map
+    private Map<String, String> changeSourceFilenameForAdd(Map<String, String> allAddMap, List<AllInformationForTaskDto> infoListAboutTask) {
+        Map<String, String> patchOldAndPatchNew = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
+        for (AllInformationForTaskDto info : infoListAboutTask) {
+            Map<String, String> patchOldAndPatchNewOneInfo = info.getAllPatchsFiles();
+            patchOldAndPatchNew.putAll(patchOldAndPatchNewOneInfo);
+        }
+        for (String oldPatch : patchOldAndPatchNew.keySet()) {
+            String newPatch = patchOldAndPatchNew.get(oldPatch);
+            String addValue = allAddMap.get(oldPatch);
+            result.put(newPatch, addValue);
+        }
+//        patchForAddFetch();
+
+        // CUSTOMER-RNID get
+        // source filename get
+        // source filename set new patch
+
         return result;
     }
 
@@ -113,8 +146,8 @@ public class Spliter {
 
             List<String> allCustomerIdListNew = getAllNodes(addByFentch, "<CUSTOMER-RNID>", "</CUSTOMER-RNID>");
             String customerId = allCustomerIdListNew.get(1);
-            List<String> allFileList = getAllNodes(allCustomerIdListNew.get(2), "<source filename=\"", "\" lifetime=");
-            String filePatch = allFileList.get(1);
+            List<String> oneFilePatch = getAllNodes(allCustomerIdListNew.get(2), "<source filename=\"", "\" lifetime=");
+            String filePatch = oneFilePatch.get(1);
             if (!result.containsKey(customerId)) {
                 result.put(customerId, Arrays.asList(filePatch));
             } else {
@@ -128,11 +161,31 @@ public class Spliter {
         return result;
     }
 
+    /**
+     * @param add part what split
+     * @return return source patch for add
+     */
+    private String patchForAddFetch(String add) {
+        List<String> oneFilePatch = getAllNodes(add, "<source filename=\"", "\" lifetime=");
+        return oneFilePatch.get(1);
+    }
 
-    private Map<String, String> changeFilePatchForAdd(Map<String, String> allFilesMap) {
-
-
-        return allFilesMap;
+    /**
+     * @param allAddWhisNewFilePatch key newFile Patch value add
+     * @return add whis new file patch
+     */
+    private Map<String, String> changeFilePatchForAdd(Map<String, String> allAddWhisNewFilePatch) {
+        Map<String, String> resultAll = new HashMap<>();
+        String resultOneAdd = "";
+        for (String patch : allAddWhisNewFilePatch.keySet()) {
+            List<String> oneFilePatch = getAllNodes(allAddWhisNewFilePatch.get(patch), "<source filename=\"", "\" lifetime=");
+            oneFilePatch.set(1, patch);
+            oneFilePatch.add(1, "<source filename=");
+            oneFilePatch.add(3, "\" lifetime=");
+            resultOneAdd = String.join("", oneFilePatch);
+            resultAll.put(patch, resultOneAdd);
+        }
+        return resultAll;
     }
 
 //    private Map<String,String>
@@ -189,6 +242,13 @@ public class Spliter {
             sb.append("</removedocs>");
         }
         String result = sb.toString();
+        //TODO WARNING delete link
+        String[] splitByLink = result.split("<LINK>");
+        String firstPart = splitByLink[0];
+        String secondPart = splitByLink[splitByLink.length - 1];
+        splitByLink = secondPart.split("</LINK>");
+        secondPart = splitByLink[splitByLink.length - 1];
+        result = firstPart.concat(secondPart);
         result = URLEncoder.encode(result, "UTF-8");
         return result;
     }

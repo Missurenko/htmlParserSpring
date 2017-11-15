@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
+import java.io.File;
 import java.util.*;
 
 
@@ -37,7 +38,9 @@ class ReadCopyForIngest {
         allTask = parseredDocuments(allTask);
 
 
-        return resultPatchAndKeyId(allTask, fileReadWrite);
+        return resultPatchAndKeyIdWriteToTmpFile(allTask, fileReadWrite);
+        // create new patch
+//                resultPatchAndKeyId(allTask, fileReadWrite);
 
 
     }
@@ -48,15 +51,69 @@ class ReadCopyForIngest {
      */
     private List<AllInformationForTaskDto> resultPatchAndKeyId(List<AllInformationForTaskDto> allTask, FileReadWrite fileReadWrite) {
         for (AllInformationForTaskDto info : allTask) {
-            List<Document> allDoc = info.getDocForParsing();
+            Map<String, Document> allDoc = info.getDocForParsing();
+            Map<String, String> oldAndNewPatch = new HashMap<>();
+            for (String keyPatch : allDoc.keySet()) {
+                Document doc = allDoc.get(keyPatch);
+                // get new patch
 
-// full patch
-            for (Document doc : allDoc) {
+                String newPatch = null;
+                if (newPatch == null) {
+                    newPatch = splitAndTakeNewPatch(keyPatch);
+                }
 
-                fileReadWrite.writeToDir(doc,"C:\\HewlettPackardEnterprise\\IDOLServer-11.3.0\\webconnector\\Parsered\\2d8585bd0e25c91ecf3584f3369bdc2e.html" );
+                String[] split = keyPatch.split("\\\\");
+                String name = split[split.length - 1];
+                newPatch = newPatch.concat("//" + name);
+                //write file
+                fileReadWrite.writeToDir(doc, newPatch);
+                oldAndNewPatch.put(keyPatch, newPatch);
+
             }
+            info.setAllPatchsFiles(oldAndNewPatch);
         }
-        return null;
+        return allTask;
+    }
+
+    /**
+     * write to temp file
+     *
+     * @param allTask
+     * @param fileReadWrite
+     * @return
+     */
+    private List<AllInformationForTaskDto> resultPatchAndKeyIdWriteToTmpFile(List<AllInformationForTaskDto> allTask, FileReadWrite fileReadWrite) {
+        for (AllInformationForTaskDto info : allTask) {
+            Map<String, Document> allDoc = info.getDocForParsing();
+
+            for (String keyPatch : allDoc.keySet()) {
+                Document doc = allDoc.get(keyPatch);
+                File file = new File(keyPatch);
+
+                // TODO WARNING change after
+                file.delete();
+
+                fileReadWrite.writeToDir(doc, keyPatch);
+            }
+
+        }
+        return allTask;
+    }
+
+    /**
+     * @param keyPatch full natch for reading
+     * @return directory for writing
+     */
+    private String splitAndTakeNewPatch(String keyPatch) {
+
+        String[] split = keyPatch.split("\\\\");
+        List<String> needPart = new ArrayList<>();
+        for (int i = 0; i < split.length - 2; i++) {
+            needPart.add(split[i]);
+        }
+        needPart.add("parsered");
+
+        return String.join("//", needPart);
     }
 
 
@@ -67,22 +124,25 @@ class ReadCopyForIngest {
     private List<AllInformationForTaskDto> parseredDocuments(List<AllInformationForTaskDto> allTask) {
 
         for (AllInformationForTaskDto task : allTask) {
-            List<Document> docsByCustomerId = task.getDocForParsing();
-            List<Element> allParseredDoc = new ArrayList<>();
-            for (Document doc : docsByCustomerId) {
+            Map<String, Document> docsByCustomerId = task.getDocForParsing();
+            Map<String, Element> allParseredDoc = new HashMap<>();
+            for (String keyPatch : docsByCustomerId.keySet()) {
+
+                Document doc = docsByCustomerId.get(keyPatch);
                 Element allElement = doc.getAllElements().first();
                 Parser parser = new Parser(allElement, task.getKeyWords(), TAG_FILTER);
                 System.out.println("Parsed element");
                 Element parseredOrigin = parser.start();
                 if (parseredOrigin == null) {
                     System.out.println("Element == null");
-                    allParseredDoc.add(null);
+                    allParseredDoc.put(keyPatch, null);
                     //TODO how how what no save
                 } else {
-                    allParseredDoc.add(parseredOrigin);
+                    allParseredDoc.put(keyPatch, parseredOrigin);
                 }
             }
         }
+
         return allTask;
     }
 

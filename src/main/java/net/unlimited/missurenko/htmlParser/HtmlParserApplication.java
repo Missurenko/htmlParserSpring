@@ -50,6 +50,7 @@ public class HtmlParserApplication {
     public String proxy(HttpServletRequest request, HttpServletResponse response,
                         @RequestBody String str) throws ServletException, IOException, ParserConfigurationException, SAXException {
         String requestURI = request.getRequestURI();
+
         System.out.println("console log - " + requestURI);
         Spliter spliter = new Spliter(str, infoListAboutTask);
         String resultBySpliter = spliter.splitByPart();

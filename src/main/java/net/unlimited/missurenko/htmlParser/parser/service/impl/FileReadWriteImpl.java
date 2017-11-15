@@ -87,7 +87,8 @@ public class FileReadWriteImpl implements FileReadWrite {
             List<String> patchs = new ArrayList<>();
             patchs.addAll(task.getAllPatchsFiles().keySet());
             List<File> files = getFilesByPatchs(patchs);
-            List<Document> resultByDoc = extractDocFromFile(files, task.getKeyWords());
+            Map<String, Document> resultByDoc = extractDocFromFile(files, task.getKeyWords());
+
             task.setDocForParsing(resultByDoc);
         }
         return allTask;
@@ -98,8 +99,8 @@ public class FileReadWriteImpl implements FileReadWrite {
      * @param keyWord                 key word for one task by key CUSTOMER-RNID
      * @return list filtered document
      */
-    private List<Document> extractDocFromFile(List<File> filesForOneCustomerTask, List<String> keyWord) {
-        List<Document> resultByDoc = new ArrayList<>();
+    private Map<String, Document> extractDocFromFile(List<File> filesForOneCustomerTask, List<String> keyWord) {
+        Map<String, Document> resultByDoc = new HashMap<>();
         for (File file : filesForOneCustomerTask) {
             Document doc = null;
             if (file != null) {
@@ -111,7 +112,7 @@ public class FileReadWriteImpl implements FileReadWrite {
                     e.printStackTrace();
                 }
                 if (containKeyWordInDoc(doc, keyWord)) {
-                    resultByDoc.add(doc);
+                    resultByDoc.put(file.getAbsolutePath(), doc);
                 }
             }
         }

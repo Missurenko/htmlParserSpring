@@ -77,8 +77,11 @@ public class ConfigAnalise {
             if (splitLine[0].equals("IngestPort")) {
                 portApp = splitLine[1];
             }
-            if (splitLine[0].equals("//IngestPortCFS")) {
+            if (splitLine[0].equals("////IngestPortCFS")) {
                 portCFS = splitLine[1];
+            }
+            if (splitLine[0].equals("////example")) {
+                System.out.println("example");
             }
 
         }
@@ -86,7 +89,7 @@ public class ConfigAnalise {
         infoApp.setCFSPort(portCFS);
         infoApp.setServerPort(portApp);
         infoApp.setCustomerId("localhost");
-        allTasksInfo.put("localhost",infoApp);
+        allTasksInfo.put("localhost", infoApp);
         List<AllInformationForTaskDto> result = new ArrayList<>();
         result.addAll(allTasksInfo.values());
         return result;
